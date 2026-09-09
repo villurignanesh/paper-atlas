@@ -547,8 +547,7 @@ hover_template = """
   <div style="opacity:0.7;font-size:0.85em;margin-bottom:4px">{venue} {year}</div>
   <div style="opacity:0.6;font-size:0.8em;margin-bottom:4px">{authors}</div>
   <div style="opacity:0.5;font-size:0.78em;margin-bottom:8px">{breadcrumb}</div>
-  <div style="font-size:0.9em;margin-bottom:8px">{snippet}</div>
-  <a href="{url}" target="_blank" rel="noopener" style="color:#4da6ff">Read paper →</a>
+  <div style="font-size:0.9em">{snippet}</div>
 </div>
 """
 
