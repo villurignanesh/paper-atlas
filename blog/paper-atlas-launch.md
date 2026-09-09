@@ -1,102 +1,27 @@
 # Paper Atlas: a map of 70,861 AI papers
 
-Six months ago I started a literature review and had no good way to see the shape
-of the field. Google Scholar returns a ranked list. arXiv returns a stream of new
-papers. Neither shows where the clusters are, which ones are growing, or where a
-given paper sits relative to the rest of the field.
+"If I have seen further, it is by standing on the shoulders of Giants," Newton wrote to Robert Hooke in 1676. That's what literature review is for: knowing what's already been tried, what worked, and what didn't, before you add anything new. Despite how important it is, I didn't see many tools helping with it. It's usually Google Scholar, or the citation network: how all the works in a niche connect to each other through citations.
 
-I built [Paper Atlas](https://villurignanesh.github.io/paper-atlas/) to answer
-that question directly. It is an interactive map of every accepted paper from six
-AI/ML venues, NeurIPS, ICML, ICLR, ACL, EMNLP, and NAACL, from 2018 through 2026.
-The corpus is 70,861 papers. Each paper is embedded, projected to two dimensions,
-clustered into a three-level topic hierarchy, and placed on one map you pan and
-zoom like a piece of geography.
+I wanted a semantic map instead. Papers placed near each other by what they're actually about, not by citation count or search rank. Then I saw [Alammar's NeurIPS 2025 map](https://newsletter.languagemodels.co/p/the-illustrated-neurips-2025-a-visual) and knew that was the shape of it, just not limited to one venue and one year.
 
-The site is free and static: no backend, no sign-up, no server costs at view
-time. The code is [open source](https://github.com/villurignanesh/paper-atlas).
+So I built [Paper Atlas](https://villurignanesh.github.io/paper-atlas/): an interactive semantic map of every accepted paper from six top AI/ML conferences, NeurIPS, ICML, ICLR, ACL, EMNLP, and NAACL, 2018 through 2026. 70,861 papers in total. It's free, it's a static site with no backend, and the code is [open source](https://github.com/villurignanesh/paper-atlas).
 
-## Why not Paper Copilot
+[Paper Copilot](https://papercopilot.com) already covers the numbers side of these venues well: submission stats, acceptance rates, reviewer dynamics. What it doesn't have is a semantic map. You can see how many papers got in. You can't see what they were about, or how that changed. Alammar's map is closer to what I mean, but it covers one conference and one year. Paper Atlas takes the same idea further: six venues, eight years, and three levels of topic hierarchy (902 fine-grained clusters, 44 mid-level topics, 8 top-level research areas) instead of a flat list.
 
-[Paper Copilot](https://papercopilot.com) already tracks this venue set well. It
-reports submission counts, acceptance rates, and reviewer dynamics. What it does
-not have is a semantic map: it shows how many papers a venue accepted, not what
-those papers were about, or how that mix shifted over time.
+Here's how it works. Every paper's title and abstract goes through an embedding model, Qwen3-Embedding-8B. UMAP projects those embeddings down to two dimensions for the map you see, and separately to ten dimensions for clustering. HDBSCAN finds the clusters. An LLM names each one, reading its most distinctive keywords and a sample of its titles.
 
-[Jay Alammar's Illustrated NeurIPS 2025](https://newsletter.languagemodels.co/p/the-illustrated-neurips-2025-a-visual)
-is closer to what I mean. It clusters and labels one conference's accepted papers
-on an interactive map. Reading it helped convince me this was worth building at
-full scale. Paper Atlas extends the same idea to six venues instead of one, eight
-years instead of one, and a three-level hierarchy (902 fine-grained clusters, 44
-mid-level topics, 8 top-level research areas) instead of a flat one. You can zoom
-from the whole field down to a single narrow sub-problem without losing the
-surrounding context.
+The pipeline itself was the easy part. The real work was checking that each step did what I assumed.
 
-## How it works
+Take the embedding model. The standard choice for scientific papers is something citation-trained, like SPECTER2. It's trained so that papers citing each other land close together. I tested it against a general-purpose embedder and against Qwen3-8B. The scoring used ICLR's own author-supplied keywords, the one piece of independent ground truth in this corpus. SPECTER2 lost on keyword agreement. It also showed no advantage on the opposite failure mode, where an embedding groups papers by venue rather than by topic. The field-standard choice for scientific papers turned out to be the wrong one here, and that was surprising enough to write up properly.
 
-Title and abstract text for each paper goes through Qwen3-Embedding-8B, an
-embedding model, to produce a vector. UMAP projects that vector to two dimensions
-for display, and separately to ten dimensions for clustering. HDBSCAN clusters
-the ten-dimensional vectors. An LLM names each cluster from its most distinctive
-keywords and a sample of its titles.
+The three hierarchy levels come from one clustering, read at three resolutions of the same density tree. They aren't three separate runs that could disagree with each other. I checked whether each fine-grained cluster actually sits inside the coarse cluster the map claims it does. It held between 97% and 100% at every resolution I tested.
 
-Three of these choices are worth explaining, because the results were not what I
-expected going in.
+The clustering isn't perfectly stable either. Rerun the whole pipeline with a different random seed and two runs agree at about 0.57 on the adjusted Rand index. The map you're looking at is fixed (seed 42) and reproducible, so it doesn't shift between visits, but a fresh run would draw some boundaries differently. That comes from UMAP's stochastic optimization, not a knob I failed to tune. For comparison, clustering on the 2D display coordinates scored 0.30 on an earlier subset, and the adjusted Rand index is built so that random assignment lands near zero. Every decision like this, including the ones that didn't work, is in the [decision log](https://github.com/villurignanesh/paper-atlas/tree/master/docs/decisions).
 
-**Embedding model.** The standard choice for scientific papers is a
-citation-trained model like SPECTER2, trained so that papers citing each other
-sit close together in the embedding space. I compared SPECTER2 against a
-general-purpose text embedder and against Qwen3-8B, scoring each against ICLR's
-own author-supplied keywords, the one piece of independent ground truth in this
-corpus. SPECTER2 scored worse on keyword agreement than the general-purpose
-embedder. It also showed no advantage on a separate check for the opposite
-failure mode: whether an embedding groups papers by venue instead of by topic. I
-used Qwen3-8B for the full corpus.
+The clustering is also where the interesting findings come from. NLP and LLMs have held a steady 45% to 46% share of the corpus every year since 2018, which runs against the story the last two years of hype would tell you. Optimization & Federated Learning moved the most, falling from 15.5% of the corpus to 6.4%. Multimodal Understanding, 3D Generation, and Graph Neural Networks & Molecular AI each roughly doubled or better. None of this shows up in acceptance counts. It only appears once the papers are grouped by what they're about. The [analytics page](https://villurignanesh.github.io/paper-atlas/analytics.html) plots these trends as lines.
 
-**Hierarchy construction.** All three levels of the topic hierarchy come from the
-same clustering, read at three resolutions of one density tree, not from three
-independent clustering runs that could disagree with each other. I validated
-that a fine-grained cluster sits inside the coarse cluster the map claims it
-does. Nesting held at 97% to 100% across every resolution I tested.
+Two smaller things worth knowing. The [browse page](https://villurignanesh.github.io/paper-atlas/table.html) is a searchable table of every paper, for when scanning beats exploring. On the map, hover any point for its authors, topic, and abstract, search to highlight matches, and use the histogram at the bottom to filter by year.
 
-**Seed stability.** Cluster assignment is not identical across random seeds. Two
-HDBSCAN runs from different seeds agree at an adjusted Rand index of about 0.57.
-Every non-trivial decision in the pipeline, including the ones that did not
-work, is documented in the repo's
-[decision log](https://github.com/villurignanesh/paper-atlas/tree/master/docs/decisions).
+Long term, I'd like Paper Atlas to reach the audience Paper Copilot has, with the same idea pointed at what papers are about rather than how many got in. The [contributing guide](https://github.com/villurignanesh/paper-atlas/blob/master/CONTRIBUTING.md) and [open issues](https://github.com/villurignanesh/paper-atlas/issues) hold the current backlog: richer per-paper summaries, institution rankings, submission and acceptance rate tracking, and a citation map alongside the semantic one. Some of those are genuinely hard, and they're scoped that way.
 
-## What the map shows
-
-Venue growth is uneven. ICLR accepted 336 papers in 2018 and 3,703 in 2025, an
-11x increase. NeurIPS and ICML each grew about 5x over the same period. ACL,
-EMNLP, and NAACL grew more slowly.
-
-The NLP and LLMs research area held a stable share of the corpus: about 45% to
-46% every year from 2018 to 2025. This area did not take over the corpus in the
-last two years, contrary to what recent coverage of LLMs might suggest.
-
-Optimization and Federated Learning moved the most. Its share of the corpus fell
-from 15.5% in 2018 to 6.4% in 2025, a drop of 9.1 percentage points, the largest
-single change on the map. Multimodal Understanding, 3D Generation, and Graph
-Neural Networks and Molecular AI each roughly doubled or more than doubled their
-share over the same period.
-
-The [analytics page](https://villurignanesh.github.io/paper-atlas/analytics.html)
-plots both trends directly, using the same clustering as the map.
-
-## Using it
-
-The [Browse page](https://villurignanesh.github.io/paper-atlas/table.html) is a
-searchable, filterable table of every paper, for scanning rather than exploring
-spatially. On the [main map](https://villurignanesh.github.io/paper-atlas/),
-hover any point to see its authors, topic, and abstract; search to highlight
-matches; use the histogram at the bottom to filter by year.
-
-The project is open source. The
-[contributing guide](https://github.com/villurignanesh/paper-atlas/blob/master/CONTRIBUTING.md)
-and [open issues](https://github.com/villurignanesh/paper-atlas/issues) list the
-current backlog: richer per-paper summaries, institution-level rankings,
-submission and acceptance rate tracking, and a few harder problems scoped
-honestly as such.
-
-If you build something on the data, or find something in the map worth
-reporting, I want to hear about it.
+If you build something on the data, or find something in the map I missed, I want to hear about it.

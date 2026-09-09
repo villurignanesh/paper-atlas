@@ -76,3 +76,18 @@ custom CSS, don't assume the custom CSS is the only thing controlling its box mo
 Grep the library's own stylesheet for the same selector before concluding a fix is
 complete. And when a root cause genuinely can't be pinned down, say so plainly instead
 of presenting a targeted override as if it were a diagnosis.
+
+## 7. Headless Chrome cannot screenshot the loaded map. Stop retrying it.
+
+Confirmed twice, weeks apart: `--headless --disable-gpu` (with or without
+`--use-gl=swiftshader`, `--enable-webgl`, `--ignore-gpu-blocklist`) gets the page's
+own headline/nav/search chrome to render, but Point Data, Label Data, Meta Data, and
+Histogram Bin Data all sit stuck at 0% in the loading overlay. Only Histogram Index
+Data reaches 100%. The scatter canvas itself never paints, in a 5s or an 8s virtual
+time budget alike.
+
+**Rule going forward:** don't spend time re-attempting flags or timing tweaks to force
+this. A real screenshot of the loaded map needs a real browser, either ask the user to
+grab one (30 seconds, open the live page, screenshot), or skip the visual and say so.
+Other pages on this site (table.html, analytics.html, blog.html) render fine headless;
+this constraint is specific to the WebGL/deck.gl scatter canvas on index.html.
