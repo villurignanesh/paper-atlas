@@ -280,6 +280,7 @@ abstracts = t.column("abstract").to_pylist()
 venues = t.column("venue").to_pylist()
 years = t.column("year").to_pylist()
 urls = t.column("source_url").to_pylist()
+authors = t.column("authors").to_pylist()
 
 proj = np.load("data/knn/umap_mindist0.5.npz", allow_pickle=False)
 proj_ids, coords = proj["ids"], proj["coords"]
@@ -347,11 +348,28 @@ def snippet(a, n=220):
     a = (a or "").strip()
     return a[:n].rsplit(" ", 1)[0] + "…" if len(a) > n else a
 
+# Author names were already in the corpus schema (paper_atlas/schema.py's authors
+# field, list<struct{name, source_author_id}>), just never wired into the hover card.
+# Confirmed near-universal coverage before using it (70,859 of 70,861 papers), unlike
+# the keywords/primary_area columns, which are ICLR-only and would make the hover card
+# inconsistent depending on which venue a point happens to be from. Truncated rather
+# than shown in full: this is the compact hover card, not the richer detail panel
+# scoped in issue #2 (jalammar's reference shows full author lists there, which fits a
+# click-through panel but not a card meant to stay scannable while hovering quickly).
+def format_authors(author_list, max_shown=3):
+    names = [a.get("name", "") for a in (author_list or []) if a.get("name")]
+    if not names:
+        return ""
+    if len(names) <= max_shown:
+        return ", ".join(names)
+    return ", ".join(names[:max_shown]) + ", et al."
+
 titles_o = [titles[i] for i in order]
 venues_o = [venues[i] for i in order]
 years_o = [years[i] for i in order]
 urls_o = [urls[i] for i in order]
 snippets_o = [snippet(abstracts[i]) for i in order]
+authors_o = [format_authors(authors[i]) for i in order]
 
 label_strings = np.array([
     cluster_labels.get(str(l), {}).get("label", "Unclustered") if l >= 0 else "Unclustered"
@@ -375,10 +393,18 @@ megacat_strings = np.array([
 ])
 hover = [f"{ti} [{v.upper()} {y}]" for ti, v, y in zip(titles_o, venues_o, years_o)]
 
+# Mega + leaf as a two-level breadcrumb (e.g. "Vision & 3D › Video Concept Transfer and
+# Dense Motion Editing"), same pattern the reference implementation uses. Mid-level (44
+# topics) deliberately skipped here to keep the hover card to one line; all three levels
+# are still fully browsable via the topic tree itself.
+breadcrumbs_o = [f"{mc} › {lf}" for mc, lf in zip(megacat_strings, label_strings)]
+
 extra = pd.DataFrame({
     "title": [htmllib.escape(x) for x in titles_o],
     "venue": [v.upper() for v in venues_o],
     "year": years_o,
+    "authors": [htmllib.escape(x) for x in authors_o],
+    "breadcrumb": [htmllib.escape(x) for x in breadcrumbs_o],
     "snippet": [htmllib.escape(x) for x in snippets_o],
     "url": urls_o,
     # enable_topic_tree has no connection to search state (confirmed via source: it's
@@ -518,7 +544,9 @@ document.addEventListener('datamapLabelsLoaded', function(e) {
 hover_template = """
 <div style="max-width:340px">
   <div style="font-weight:600;margin-bottom:4px">{title}</div>
-  <div style="opacity:0.7;font-size:0.85em;margin-bottom:6px">{venue} {year}</div>
+  <div style="opacity:0.7;font-size:0.85em;margin-bottom:4px">{venue} {year}</div>
+  <div style="opacity:0.6;font-size:0.8em;margin-bottom:4px">{authors}</div>
+  <div style="opacity:0.5;font-size:0.78em;margin-bottom:8px">{breadcrumb}</div>
   <div style="font-size:0.9em;margin-bottom:8px">{snippet}</div>
   <a href="{url}" target="_blank" rel="noopener" style="color:#4da6ff">Read paper →</a>
 </div>
