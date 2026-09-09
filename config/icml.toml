@@ -1,0 +1,49 @@
+# ICML volume map on PMLR. Decision: 006 pattern (explicit, not inferred).
+#
+# PMLR volume numbers have no relationship to year, and the index contains WORKSHOP
+# volumes that name ICML and must not be ingested: v184 "ICML 2022 Workshop on
+# Healthcare AI", v251 "GRaM at ICML" (2024), v292 "TerraBytes at ICML" (2025).
+# Inferring "ICML volumes" from the title would silently pull all three in.
+#
+# 2026 absent: ICML 2026 was held in July but PMLR has not published the volume yet
+# (checked 2026-08-27; volumes up to 339 exist, none of them ICML 2026).
+
+[[collection]]
+year = 2018
+volume = "v80"
+expected = 621
+
+[[collection]]
+year = 2019
+volume = "v97"
+expected = 773
+
+[[collection]]
+year = 2020
+volume = "v119"
+expected = 1084
+
+[[collection]]
+year = 2021
+volume = "v139"
+expected = 1183
+
+[[collection]]
+year = 2022
+volume = "v162"
+expected = 1233
+
+[[collection]]
+year = 2023
+volume = "v202"
+expected = 1828
+
+[[collection]]
+year = 2024
+volume = "v235"
+expected = 2610
+
+[[collection]]
+year = 2025
+volume = "v267"
+expected = 3330

@@ -1,0 +1,6 @@
+{
+  "trustworthiness": 0.8839232924787355,
+  "n_neighbors": 15,
+  "subsample": 5000,
+  "corpus": "final, post-fix, 70861 papers, Qwen3-8B"
+}

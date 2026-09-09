@@ -1,0 +1,19 @@
+{
+  "model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "knn_keywords": {
+    "n_labelled": 15857,
+    "k": 10,
+    "knn_jaccard": 0.056416974816457355,
+    "random_jaccard": 0.002885570552862454,
+    "jaccard_lift": 19.551410642339814,
+    "knn_any_shared": 0.29025036261587944,
+    "random_any_shared": 0.01878034937251687
+  },
+  "venue": {
+    "n": 30000,
+    "accuracy": 0.6345333333333333,
+    "macro_f1": 0.48173738419595574,
+    "majority_baseline": 0.3078666666666667
+  }
+}

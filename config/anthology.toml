@@ -1,0 +1,178 @@
+# ACL Anthology venue-year -> collection mapping. Decision: 006.
+#
+# Hand-verified against volume booktitles. `expected` is a SELF-CONSISTENCY check:
+# it comes from the same XML the parser reads, so it catches parser bugs and future
+# source drift, NOT under-collection by the Anthology itself. Independent validation
+# is the DBLP recall check (002).
+#
+# Absent by design: naacl 2020 and 2023 (conference did not run);
+# emnlp/naacl 2026 (not yet announced as of 2026-08-27).
+
+[[collection]]
+venue = "acl"
+year = 2018
+collection = "P18"
+main_volumes = ["1", "2"]
+expected = 381
+note = "legacy: vol1 Long, vol2 Short"
+
+[[collection]]
+venue = "acl"
+year = 2019
+collection = "P19"
+main_volumes = ["1"]
+expected = 660
+note = "legacy: long+short merged into one volume"
+
+[[collection]]
+venue = "acl"
+year = 2020
+collection = "2020.acl"
+main_volumes = ["main"]
+expected = 778
+note = "single 'main' volume"
+
+[[collection]]
+venue = "acl"
+year = 2021
+collection = "2021.acl"
+main_volumes = ["long", "short"]
+expected = 710
+
+[[collection]]
+venue = "acl"
+year = 2022
+collection = "2022.acl"
+main_volumes = ["long", "short"]
+expected = 700
+
+[[collection]]
+venue = "acl"
+year = 2023
+collection = "2023.acl"
+main_volumes = ["long", "short"]
+expected = 1075
+
+[[collection]]
+venue = "acl"
+year = 2024
+collection = "2024.acl"
+main_volumes = ["long", "short"]
+expected = 940
+
+[[collection]]
+venue = "acl"
+year = 2025
+collection = "2025.acl"
+main_volumes = ["long", "short"]
+expected = 1699
+
+[[collection]]
+venue = "acl"
+year = 2026
+collection = "2026.acl"
+main_volumes = ["long", "short"]
+expected = 2296
+
+[[collection]]
+venue = "emnlp"
+year = 2018
+collection = "D18"
+main_volumes = ["1"]
+expected = 549
+note = "legacy: single main volume"
+
+[[collection]]
+venue = "emnlp"
+year = 2019
+collection = "D19"
+main_volumes = ["1"]
+expected = 681
+note = "legacy: EMNLP-IJCNLP joint; vols 50-66 are workshops"
+
+[[collection]]
+venue = "emnlp"
+year = 2020
+collection = "2020.emnlp"
+main_volumes = ["main"]
+expected = 751
+
+[[collection]]
+venue = "emnlp"
+year = 2021
+collection = "2021.emnlp"
+main_volumes = ["main"]
+expected = 847
+
+[[collection]]
+venue = "emnlp"
+year = 2022
+collection = "2022.emnlp"
+main_volumes = ["main"]
+expected = 828
+
+[[collection]]
+venue = "emnlp"
+year = 2023
+collection = "2023.emnlp"
+main_volumes = ["main"]
+expected = 1047
+
+[[collection]]
+venue = "emnlp"
+year = 2024
+collection = "2024.emnlp"
+main_volumes = ["main"]
+expected = 1268
+
+[[collection]]
+venue = "emnlp"
+year = 2025
+collection = "2025.emnlp"
+main_volumes = ["main"]
+expected = 1809
+
+[[collection]]
+venue = "naacl"
+year = 2018
+collection = "N18"
+main_volumes = ["1", "2"]
+expected = 330
+note = "legacy: vol1 Long, vol2 Short; vol3 Industry excluded"
+
+[[collection]]
+venue = "naacl"
+year = 2019
+collection = "N19"
+main_volumes = ["1"]
+expected = 423
+note = "legacy: long+short merged; vol2 Industry excluded"
+
+[[collection]]
+venue = "naacl"
+year = 2021
+collection = "2021.naacl"
+main_volumes = ["main"]
+expected = 477
+
+[[collection]]
+venue = "naacl"
+year = 2022
+collection = "2022.naacl"
+main_volumes = ["main"]
+expected = 442
+
+[[collection]]
+venue = "naacl"
+year = 2024
+collection = "2024.naacl"
+main_volumes = ["long", "short"]
+expected = 562
+
+[[collection]]
+venue = "naacl"
+year = 2025
+collection = "2025.naacl"
+main_volumes = ["long", "short"]
+expected = 718
+note = "renamed 'Nations of the Americas Chapter'"

@@ -1,0 +1,19 @@
+{
+  "model": "Qwen/Qwen3-Embedding-8B",
+  "dim": 4096,
+  "knn_keywords": {
+    "n_labelled": 15857,
+    "k": 10,
+    "knn_jaccard": 0.06339181633821601,
+    "random_jaccard": 0.002885570552862454,
+    "jaccard_lift": 21.968555326201272,
+    "knn_any_shared": 0.32365516806457717,
+    "random_any_shared": 0.01878034937251687
+  },
+  "venue": {
+    "n": 30000,
+    "accuracy": 0.6621333333333334,
+    "macro_f1": 0.5035514088616382,
+    "majority_baseline": 0.3078666666666667
+  }
+}

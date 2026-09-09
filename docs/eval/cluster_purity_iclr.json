@@ -1,0 +1,8 @@
+{
+  "n_clusters_evaluated": 757,
+  "n_iclr_papers_with_keywords_used": 15857,
+  "mean_within_cluster_jaccard": 0.06069422525088431,
+  "mean_size_matched_random_jaccard": 0.002785167499109021,
+  "lift": 21.79,
+  "median_iclr_papers_per_evaluated_cluster": 9
+}

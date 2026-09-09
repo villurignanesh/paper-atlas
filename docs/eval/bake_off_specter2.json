@@ -1,0 +1,19 @@
+{
+  "model": "allenai/specter2 (base+proximity adapter)",
+  "dim": 768,
+  "knn_keywords": {
+    "n_labelled": 15857,
+    "k": 10,
+    "knn_jaccard": 0.05146340350131666,
+    "random_jaccard": 0.002885570552862454,
+    "jaccard_lift": 17.83474101864033,
+    "knn_any_shared": 0.26479157469887116,
+    "random_any_shared": 0.01878034937251687
+  },
+  "venue": {
+    "n": 30000,
+    "accuracy": 0.6394666666666666,
+    "macro_f1": 0.48054508513452737,
+    "majority_baseline": 0.3078666666666667
+  }
+}

@@ -1,0 +1,61 @@
+# ICLR acquisition map. Decision: 007.
+#
+# Two paths, not five:
+#   api1 years -> fetch all Blind_Submissions for content, filter to DBLP's accept list
+#   api2 years -> content.venueid is already accept-only
+#
+# `expected` is DBLP's TOC total minus the one front-matter row. It is an INDEPENDENT
+# check here (unlike 006's Anthology counts, which were self-consistency only), because
+# DBLP is a different source from the content provider.
+# 2026 has no expected count: DBLP has not indexed ICLR 2026 at all, which is exactly
+# why that year must use the api2 native path.
+
+[[collection]]
+year = 2018
+api = "v1"
+expected = 336
+
+[[collection]]
+year = 2019
+api = "v1"
+expected = 502
+
+[[collection]]
+year = 2020
+api = "v1"
+expected = 687
+
+[[collection]]
+year = 2021
+api = "v1"
+expected = 860
+note = "native `venue` field also present when accepted; kept as cross-check"
+
+[[collection]]
+year = 2022
+api = "v1"
+expected = 1094
+note = "rejected read 'ICLR 2022 Submitted'"
+
+[[collection]]
+year = 2023
+api = "v1"
+expected = 1573
+note = "rejected read 'Submitted to ICLR 2023'"
+
+[[collection]]
+year = 2024
+api = "v2"
+expected = 2260
+note = "venue strings lowercase: 'ICLR 2024 poster'"
+
+[[collection]]
+year = 2025
+api = "v2"
+expected = 3704
+note = "venue strings capitalised: 'ICLR 2025 Poster'"
+
+[[collection]]
+year = 2026
+api = "v2"
+note = "not in DBLP; api2 native path is mandatory here"

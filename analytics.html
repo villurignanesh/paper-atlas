@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Paper Atlas · Analytics</title>
+<style>
+@font-face {
+    font-family: "Valley Sans";
+    src: url("fonts/ValleySans-Variable.woff2") format("woff2-variations"),
+         url("fonts/ValleySans-Variable.woff2") format("woff2");
+    font-weight: 100 900;
+}
+:root { --bg: #14181f; --panel: rgba(24,28,38,0.75); --text: #e8e8f0; --accent: #6b6eaf; }
+* { box-sizing: border-box; }
+body {
+    background: var(--bg); color: var(--text); margin: 0; padding: 96px 24px 80px;
+    font-family: "Valley Sans", -apple-system, sans-serif; font-weight: 400;
+}
+
+#pa-nav {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 1000;
+    display: flex; align-items: center; gap: 22px;
+    background: rgba(15, 18, 26, 0.82); backdrop-filter: blur(14px);
+    border: 1px solid rgba(107, 111, 176, 0.35);
+    border-radius: 999px;
+    padding: 7px 8px 7px 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    font-family: var(--ui-font, "Valley Sans", -apple-system, sans-serif);
+}
+#pa-nav-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 14px; color: #e8e8f0; text-decoration: none;
+    white-space: nowrap;
+}
+#pa-nav-brand svg { width: 20px; height: 20px; flex-shrink: 0; }
+#pa-nav-links { display: flex; align-items: center; gap: 2px; }
+.pa-nav-link {
+    font-weight: 600; font-size: 13px; text-decoration: none;
+    color: rgba(232, 232, 240, 0.62);
+    padding: 7px 15px; border-radius: 999px;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+.pa-nav-link:hover { color: #e8e8f0; }
+.pa-nav-link.active { color: #0d0f14; background: #e8e8f0; }
+.pa-nav-link.active:hover { color: #0d0f14; }
+
+h1 { font-weight: 700; font-size: 28px; margin: 0 0 4px; }
+.subtitle { opacity: 0.65; font-size: 14px; margin-bottom: 32px; }
+.panel {
+    background: var(--panel); backdrop-filter: blur(8px);
+    border: 1px solid rgba(107,111,176,0.35); border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    padding: 24px; max-width: 960px; margin: 0 auto 32px;
+}
+h2 { font-weight: 600; font-size: 18px; margin: 0 0 4px; }
+.panel-desc { opacity: 0.6; font-size: 13px; margin-bottom: 16px; }
+.chart { width: 100%; height: auto; }
+.axis-label { fill: rgba(232,232,240,0.55); font-size: 11px; }
+.gridline { stroke: rgba(232,232,240,0.08); stroke-width: 1; }
+.legend-label { fill: rgba(232,232,240,0.85); font-size: 12px; }
+.legend-item, .legend-item2 { cursor: default; }
+.trend-line { transition: opacity 0.15s; }
+.trend-line.dim { opacity: 0.12 !important; }
+.legend-item.dim .legend-label { opacity: 0.35; }
+.trend-pt { cursor: pointer; transition: r 0.12s ease; }
+.trend-pt:hover { r: 6.5; stroke: #f4f4f8; stroke-width: 1.5; }
+.hover-guide {
+    stroke: rgba(232,232,240,0.25); stroke-width: 1; stroke-dasharray: 3 3;
+    opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
+}
+.hover-guide.visible { opacity: 1; }
+/* Bars: only visual feedback previously was the tooltip appearing, no highlight on the
+   bar itself, which is what read as "not interactive" even though hovering worked.
+   !important beats the per-bar inline opacity (1.0 complete / 0.45 incomplete) so a
+   faded incomplete-year bar still snaps to full visibility and brightens on hover. */
+.bar { cursor: pointer; transition: opacity 0.12s ease, filter 0.12s ease; }
+.bar:hover { opacity: 1 !important; filter: brightness(1.4); }
+.tooltip {
+    position: fixed; display: none; background: rgba(10,12,18,0.95);
+    border: 1px solid rgba(107,111,176,0.5); border-radius: 8px; padding: 8px 12px;
+    font-size: 12px; pointer-events: none; z-index: 10;
+}
+.note { opacity: 0.5; font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<nav id="pa-nav"><a href="index.html" id="pa-nav-brand"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="pa-logo-icon">
+  <line x1="8" y1="10" x2="16" y2="7" stroke="#6b6fb0" stroke-width="1.4" opacity="0.7"/>
+  <line x1="16" y1="7" x2="24" y2="12" stroke="#8567a8" stroke-width="1.4" opacity="0.7"/>
+  <line x1="8" y1="10" x2="10" y2="20" stroke="#3e8e8a" stroke-width="1.4" opacity="0.7"/>
+  <line x1="16" y1="7" x2="18" y2="18" stroke="#3b5f8a" stroke-width="1.4" opacity="0.7"/>
+  <line x1="24" y1="12" x2="18" y2="18" stroke="#6b6fb0" stroke-width="1.4" opacity="0.7"/>
+  <line x1="10" y1="20" x2="18" y2="18" stroke="#3e8e8a" stroke-width="1.4" opacity="0.7"/>
+  <line x1="10" y1="20" x2="17" y2="25" stroke="#8567a8" stroke-width="1.4" opacity="0.7"/>
+  <line x1="18" y1="18" x2="17" y2="25" stroke="#3b5f8a" stroke-width="1.4" opacity="0.7"/>
+  <circle cx="8" cy="10" r="3.1" fill="#3b5f8a"/>
+  <circle cx="16" cy="7" r="2.5" fill="#3e8e8a"/>
+  <circle cx="24" cy="12" r="2.8" fill="#6b6fb0"/>
+  <circle cx="18" cy="18" r="3.4" fill="#8567a8"/>
+  <circle cx="10" cy="20" r="2.3" fill="#3e8e8a"/>
+  <circle cx="17" cy="25" r="2.6" fill="#3b5f8a"/>
+</svg><span>Paper Atlas</span></a><div id="pa-nav-links"><a href="index.html" class="pa-nav-link">Map</a><a href="table.html" class="pa-nav-link">Browse</a><a href="analytics.html" class="pa-nav-link active">Analytics</a></div></nav>
+<h1>Analytics</h1>
+<div class="subtitle">70,861 papers · NeurIPS · ICML · ICLR · ACL · EMNLP · NAACL · 2018&ndash;2025</div>
+
+<div class="panel">
+  <h2>What the field pays attention to, over time</h2>
+  <div class="panel-desc">Share of that year's corpus, by broad research area. Not raw counts (the corpus itself grew ~5x over this period): this shows which areas grew faster or slower than the field as a whole.</div>
+  <svg viewBox="0 0 200 240" class="chart" style="max-width:220px;float:right"><g class="legend-item" data-series="0"><rect x="0" y="20" width="12" height="12" rx="3" fill="#3b5f8a"/><text x="18" y="30" class="legend-label">Natural Language Processing &amp; LLMs</text></g><g class="legend-item" data-series="1"><rect x="0" y="42" width="12" height="12" rx="3" fill="#3c718a"/><text x="18" y="52" class="legend-label">Cross-Cutting &amp; Specialized Research</text></g><g class="legend-item" data-series="2"><rect x="0" y="64" width="12" height="12" rx="3" fill="#3d848a"/><text x="18" y="74" class="legend-label">Optimization &amp; Federated Learning</text></g><g class="legend-item" data-series="3"><rect x="0" y="86" width="12" height="12" rx="3" fill="#468891"/><text x="18" y="96" class="legend-label">Reinforcement Learning</text></g><g class="legend-item" data-series="4"><rect x="0" y="108" width="12" height="12" rx="3" fill="#597ba0"/><text x="18" y="118" class="legend-label">Generative Modeling and Inference</text></g><g class="legend-item" data-series="5"><rect x="0" y="130" width="12" height="12" rx="3" fill="#6b6eaf"/><text x="18" y="140" class="legend-label">Online Learning and Bandits</text></g><g class="legend-item" data-series="6"><rect x="0" y="152" width="12" height="12" rx="3" fill="#756bac"/><text x="18" y="162" class="legend-label">Multimodal Understanding &amp; Reasoning</text></g><g class="legend-item" data-series="7"><rect x="0" y="174" width="12" height="12" rx="3" fill="#8068a9"/><text x="18" y="184" class="legend-label">Graph Neural Networks &amp; Molecular AI</text></g><g class="legend-item" data-series="8"><rect x="0" y="196" width="12" height="12" rx="3" fill="#7665a2"/><text x="18" y="206" class="legend-label">3D Generation &amp; Reconstruction</text></g></svg>
+  
+<svg viewBox="0 0 900 460" class="chart">
+  <text x="45" y="424.0" text-anchor="end" class="axis-label">0%</text><line x1="55" y1="420.0" x2="880" y2="420.0" class="gridline"/><text x="45" y="344.0" text-anchor="end" class="axis-label">10%</text><line x1="55" y1="340.0" x2="880" y2="340.0" class="gridline"/><text x="45" y="264.0" text-anchor="end" class="axis-label">20%</text><line x1="55" y1="260.0" x2="880" y2="260.0" class="gridline"/><text x="45" y="184.1" text-anchor="end" class="axis-label">30%</text><line x1="55" y1="180.1" x2="880" y2="180.1" class="gridline"/><text x="45" y="104.1" text-anchor="end" class="axis-label">40%</text><line x1="55" y1="100.1" x2="880" y2="100.1" class="gridline"/><text x="45" y="24.1" text-anchor="end" class="axis-label">50%</text><line x1="55" y1="20.1" x2="880" y2="20.1" class="gridline"/>
+  <line id="hover-guide" x1="0" y1="20" x2="0" y2="420" class="hover-guide"/>
+  <polyline points="55.0,62.7 172.9,58.3 290.7,126.6 408.6,111.4 526.4,133.1 644.3,153.3 762.1,101.9 880.0,49.6" fill="none" stroke="#3b5f8a" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="0"/><polyline points="55.0,324.3 172.9,321.3 290.7,289.2 408.6,290.8 526.4,286.6 644.3,283.9 762.1,298.6 880.0,316.8" fill="none" stroke="#3c718a" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="1"/><polyline points="55.0,296.3 172.9,307.1 290.7,308.4 408.6,316.8 526.4,313.0 644.3,323.2 762.1,348.3 880.0,368.7" fill="none" stroke="#3d848a" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="2"/><polyline points="55.0,352.7 172.9,347.2 290.7,321.1 408.6,323.3 526.4,322.0 644.3,329.4 762.1,349.0 880.0,364.1" fill="none" stroke="#468891" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="3"/><polyline points="55.0,356.4 172.9,365.5 290.7,371.7 408.6,378.2 526.4,381.8 644.3,368.9 762.1,371.7 880.0,370.2" fill="none" stroke="#597ba0" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="4"/><polyline points="55.0,372.9 172.9,371.3 290.7,363.4 408.6,368.0 526.4,366.3 644.3,366.3 762.1,379.1 880.0,386.1" fill="none" stroke="#6b6eaf" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="5"/><polyline points="55.0,398.7 172.9,401.9 290.7,403.8 408.6,394.9 526.4,392.4 644.3,386.3 762.1,372.3 880.0,363.1" fill="none" stroke="#756bac" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="6"/><polyline points="55.0,405.5 172.9,399.2 290.7,393.7 408.6,392.4 526.4,387.4 644.3,377.6 762.1,380.2 880.0,382.2" fill="none" stroke="#8068a9" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="7"/><polyline points="55.0,410.6 172.9,408.5 290.7,402.6 408.6,404.6 526.4,397.6 644.3,391.3 762.1,379.2 880.0,379.5" fill="none" stroke="#7665a2" stroke-width="2.2" opacity="0.9" class="trend-line" data-series="8"/>
+  <circle cx="55.0" cy="62.7" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2018" data-val="44.68" data-name="Natural Language Processing &amp; LLMs" data-x="55.0"/><circle cx="172.9" cy="58.3" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2019" data-val="45.23" data-name="Natural Language Processing &amp; LLMs" data-x="172.9"/><circle cx="290.7" cy="126.6" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2020" data-val="36.69" data-name="Natural Language Processing &amp; LLMs" data-x="290.7"/><circle cx="408.6" cy="111.4" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2021" data-val="38.59" data-name="Natural Language Processing &amp; LLMs" data-x="408.6"/><circle cx="526.4" cy="133.1" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2022" data-val="35.87" data-name="Natural Language Processing &amp; LLMs" data-x="526.4"/><circle cx="644.3" cy="153.3" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2023" data-val="33.35" data-name="Natural Language Processing &amp; LLMs" data-x="644.3"/><circle cx="762.1" cy="101.9" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2024" data-val="39.78" data-name="Natural Language Processing &amp; LLMs" data-x="762.1"/><circle cx="880.0" cy="49.6" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2025" data-val="46.31" data-name="Natural Language Processing &amp; LLMs" data-x="880.0"/><circle cx="55.0" cy="324.3" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2018" data-val="11.96" data-name="Cross-Cutting &amp; Specialized Research" data-x="55.0"/><circle cx="172.9" cy="321.3" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2019" data-val="12.34" data-name="Cross-Cutting &amp; Specialized Research" data-x="172.9"/><circle cx="290.7" cy="289.2" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2020" data-val="16.36" data-name="Cross-Cutting &amp; Specialized Research" data-x="290.7"/><circle cx="408.6" cy="290.8" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2021" data-val="16.16" data-name="Cross-Cutting &amp; Specialized Research" data-x="408.6"/><circle cx="526.4" cy="286.6" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2022" data-val="16.68" data-name="Cross-Cutting &amp; Specialized Research" data-x="526.4"/><circle cx="644.3" cy="283.9" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2023" data-val="17.02" data-name="Cross-Cutting &amp; Specialized Research" data-x="644.3"/><circle cx="762.1" cy="298.6" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2024" data-val="15.18" data-name="Cross-Cutting &amp; Specialized Research" data-x="762.1"/><circle cx="880.0" cy="316.8" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2025" data-val="12.91" data-name="Cross-Cutting &amp; Specialized Research" data-x="880.0"/><circle cx="55.0" cy="296.3" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2018" data-val="15.47" data-name="Optimization &amp; Federated Learning" data-x="55.0"/><circle cx="172.9" cy="307.1" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2019" data-val="14.12" data-name="Optimization &amp; Federated Learning" data-x="172.9"/><circle cx="290.7" cy="308.4" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2020" data-val="13.96" data-name="Optimization &amp; Federated Learning" data-x="290.7"/><circle cx="408.6" cy="316.8" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2021" data-val="12.91" data-name="Optimization &amp; Federated Learning" data-x="408.6"/><circle cx="526.4" cy="313.0" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2022" data-val="13.38" data-name="Optimization &amp; Federated Learning" data-x="526.4"/><circle cx="644.3" cy="323.2" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2023" data-val="12.1" data-name="Optimization &amp; Federated Learning" data-x="644.3"/><circle cx="762.1" cy="348.3" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2024" data-val="8.97" data-name="Optimization &amp; Federated Learning" data-x="762.1"/><circle cx="880.0" cy="368.7" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2025" data-val="6.41" data-name="Optimization &amp; Federated Learning" data-x="880.0"/><circle cx="55.0" cy="352.7" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2018" data-val="8.41" data-name="Reinforcement Learning" data-x="55.0"/><circle cx="172.9" cy="347.2" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2019" data-val="9.1" data-name="Reinforcement Learning" data-x="172.9"/><circle cx="290.7" cy="321.1" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2020" data-val="12.37" data-name="Reinforcement Learning" data-x="290.7"/><circle cx="408.6" cy="323.3" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2021" data-val="12.09" data-name="Reinforcement Learning" data-x="408.6"/><circle cx="526.4" cy="322.0" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2022" data-val="12.25" data-name="Reinforcement Learning" data-x="526.4"/><circle cx="644.3" cy="329.4" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2023" data-val="11.33" data-name="Reinforcement Learning" data-x="644.3"/><circle cx="762.1" cy="349.0" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2024" data-val="8.88" data-name="Reinforcement Learning" data-x="762.1"/><circle cx="880.0" cy="364.1" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2025" data-val="6.99" data-name="Reinforcement Learning" data-x="880.0"/><circle cx="55.0" cy="356.4" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2018" data-val="7.95" data-name="Generative Modeling and Inference" data-x="55.0"/><circle cx="172.9" cy="365.5" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2019" data-val="6.81" data-name="Generative Modeling and Inference" data-x="172.9"/><circle cx="290.7" cy="371.7" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2020" data-val="6.04" data-name="Generative Modeling and Inference" data-x="290.7"/><circle cx="408.6" cy="378.2" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2021" data-val="5.23" data-name="Generative Modeling and Inference" data-x="408.6"/><circle cx="526.4" cy="381.8" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2022" data-val="4.78" data-name="Generative Modeling and Inference" data-x="526.4"/><circle cx="644.3" cy="368.9" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2023" data-val="6.39" data-name="Generative Modeling and Inference" data-x="644.3"/><circle cx="762.1" cy="371.7" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2024" data-val="6.04" data-name="Generative Modeling and Inference" data-x="762.1"/><circle cx="880.0" cy="370.2" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2025" data-val="6.23" data-name="Generative Modeling and Inference" data-x="880.0"/><circle cx="55.0" cy="372.9" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2018" data-val="5.89" data-name="Online Learning and Bandits" data-x="55.0"/><circle cx="172.9" cy="371.3" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2019" data-val="6.09" data-name="Online Learning and Bandits" data-x="172.9"/><circle cx="290.7" cy="363.4" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2020" data-val="7.08" data-name="Online Learning and Bandits" data-x="290.7"/><circle cx="408.6" cy="368.0" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2021" data-val="6.5" data-name="Online Learning and Bandits" data-x="408.6"/><circle cx="526.4" cy="366.3" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2022" data-val="6.71" data-name="Online Learning and Bandits" data-x="526.4"/><circle cx="644.3" cy="366.3" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2023" data-val="6.71" data-name="Online Learning and Bandits" data-x="644.3"/><circle cx="762.1" cy="379.1" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2024" data-val="5.11" data-name="Online Learning and Bandits" data-x="762.1"/><circle cx="880.0" cy="386.1" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2025" data-val="4.24" data-name="Online Learning and Bandits" data-x="880.0"/><circle cx="55.0" cy="398.7" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2018" data-val="2.66" data-name="Multimodal Understanding &amp; Reasoning" data-x="55.0"/><circle cx="172.9" cy="401.9" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2019" data-val="2.26" data-name="Multimodal Understanding &amp; Reasoning" data-x="172.9"/><circle cx="290.7" cy="403.8" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2020" data-val="2.03" data-name="Multimodal Understanding &amp; Reasoning" data-x="290.7"/><circle cx="408.6" cy="394.9" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2021" data-val="3.14" data-name="Multimodal Understanding &amp; Reasoning" data-x="408.6"/><circle cx="526.4" cy="392.4" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2022" data-val="3.45" data-name="Multimodal Understanding &amp; Reasoning" data-x="526.4"/><circle cx="644.3" cy="386.3" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2023" data-val="4.21" data-name="Multimodal Understanding &amp; Reasoning" data-x="644.3"/><circle cx="762.1" cy="372.3" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2024" data-val="5.96" data-name="Multimodal Understanding &amp; Reasoning" data-x="762.1"/><circle cx="880.0" cy="363.1" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2025" data-val="7.12" data-name="Multimodal Understanding &amp; Reasoning" data-x="880.0"/><circle cx="55.0" cy="405.5" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2018" data-val="1.81" data-name="Graph Neural Networks &amp; Molecular AI" data-x="55.0"/><circle cx="172.9" cy="399.2" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2019" data-val="2.6" data-name="Graph Neural Networks &amp; Molecular AI" data-x="172.9"/><circle cx="290.7" cy="393.7" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2020" data-val="3.29" data-name="Graph Neural Networks &amp; Molecular AI" data-x="290.7"/><circle cx="408.6" cy="392.4" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2021" data-val="3.45" data-name="Graph Neural Networks &amp; Molecular AI" data-x="408.6"/><circle cx="526.4" cy="387.4" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2022" data-val="4.08" data-name="Graph Neural Networks &amp; Molecular AI" data-x="526.4"/><circle cx="644.3" cy="377.6" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2023" data-val="5.3" data-name="Graph Neural Networks &amp; Molecular AI" data-x="644.3"/><circle cx="762.1" cy="380.2" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2024" data-val="4.98" data-name="Graph Neural Networks &amp; Molecular AI" data-x="762.1"/><circle cx="880.0" cy="382.2" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2025" data-val="4.73" data-name="Graph Neural Networks &amp; Molecular AI" data-x="880.0"/><circle cx="55.0" cy="410.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2018" data-val="1.17" data-name="3D Generation &amp; Reconstruction" data-x="55.0"/><circle cx="172.9" cy="408.5" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2019" data-val="1.44" data-name="3D Generation &amp; Reconstruction" data-x="172.9"/><circle cx="290.7" cy="402.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2020" data-val="2.18" data-name="3D Generation &amp; Reconstruction" data-x="290.7"/><circle cx="408.6" cy="404.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2021" data-val="1.93" data-name="3D Generation &amp; Reconstruction" data-x="408.6"/><circle cx="526.4" cy="397.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2022" data-val="2.8" data-name="3D Generation &amp; Reconstruction" data-x="526.4"/><circle cx="644.3" cy="391.3" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2023" data-val="3.59" data-name="3D Generation &amp; Reconstruction" data-x="644.3"/><circle cx="762.1" cy="379.2" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2024" data-val="5.1" data-name="3D Generation &amp; Reconstruction" data-x="762.1"/><circle cx="880.0" cy="379.5" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2025" data-val="5.07" data-name="3D Generation &amp; Reconstruction" data-x="880.0"/>
+  <text x="55.0" y="440" text-anchor="middle" class="axis-label">2018</text><text x="172.9" y="440" text-anchor="middle" class="axis-label">2019</text><text x="290.7" y="440" text-anchor="middle" class="axis-label">2020</text><text x="408.6" y="440" text-anchor="middle" class="axis-label">2021</text><text x="526.4" y="440" text-anchor="middle" class="axis-label">2022</text><text x="644.3" y="440" text-anchor="middle" class="axis-label">2023</text><text x="762.1" y="440" text-anchor="middle" class="axis-label">2024</text><text x="880.0" y="440" text-anchor="middle" class="axis-label">2025</text>
+</svg>
+
+</div>
+
+<div class="panel">
+  <h2>Share of accepted papers by venue, by year</h2>
+  <div class="panel-desc">Each venue's share of that year's total accepted papers, not raw counts (the corpus grew ~5x over this period, so raw counts alone would mostly just show that growth rather than how the venue mix shifted). From the ingestion manifest (48 venue-years).</div>
+  
+<svg viewBox="0 0 900 410" class="chart">
+  <g transform="translate(50,0)"><g class="legend-item2"><rect x="0" y="0" width="12" height="12" rx="3" fill="#3b5f8a"/><text x="18" y="10" class="legend-label">ACL</text></g><g class="legend-item2"><rect x="110" y="0" width="12" height="12" rx="3" fill="#3c718a"/><text x="128" y="10" class="legend-label">EMNLP</text></g><g class="legend-item2"><rect x="220" y="0" width="12" height="12" rx="3" fill="#3d848a"/><text x="238" y="10" class="legend-label">ICLR</text></g><g class="legend-item2"><rect x="330" y="0" width="12" height="12" rx="3" fill="#468891"/><text x="348" y="10" class="legend-label">ICML</text></g><g class="legend-item2"><rect x="440" y="0" width="12" height="12" rx="3" fill="#597ba0"/><text x="458" y="10" class="legend-label">NAACL</text></g><g class="legend-item2"><rect x="550" y="0" width="12" height="12" rx="3" fill="#6b6eaf"/><text x="568" y="10" class="legend-label">NEURIPS</text></g></g>
+  <g transform="translate(0,30)">
+    <text x="45" y="344.0" text-anchor="end" class="axis-label">0%</text><line x1="55" y1="340.0" x2="880" y2="340.0" class="gridline"/><text x="45" y="266.7" text-anchor="end" class="axis-label">10%</text><line x1="55" y1="262.7" x2="880" y2="262.7" class="gridline"/><text x="45" y="189.4" text-anchor="end" class="axis-label">20%</text><line x1="55" y1="185.4" x2="880" y2="185.4" class="gridline"/><text x="45" y="112.1" text-anchor="end" class="axis-label">30%</text><line x1="55" y1="108.1" x2="880" y2="108.1" class="gridline"/><text x="45" y="34.8" text-anchor="end" class="axis-label">40%</text><line x1="55" y1="30.8" x2="880" y2="30.8" class="gridline"/>
+    <rect x="55.0" y="248.7" width="12.5" height="91.3" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2018" data-share="11.8" data-complete="true"/><rect x="69.7" y="208.5" width="12.5" height="131.5" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2018" data-share="17.0" data-complete="true"/><rect x="84.5" y="259.5" width="12.5" height="80.5" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2018" data-share="10.4" data-complete="true"/><rect x="99.2" y="191.2" width="12.5" height="148.8" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2018" data-share="19.2" data-complete="true"/><rect x="113.9" y="260.9" width="12.5" height="79.1" fill="#597ba0" opacity="1.0" class="bar" data-venue="naacl" data-year="2018" data-share="10.2" data-complete="true"/><rect x="128.7" y="98.2" width="12.5" height="241.8" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2018" data-share="31.3" data-complete="true"/><rect x="158.1" y="225.8" width="12.5" height="114.2" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2019" data-share="14.8" data-complete="true"/><rect x="172.9" y="222.2" width="12.5" height="117.8" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2019" data-share="15.2" data-complete="true"/><rect x="187.6" y="253.1" width="12.5" height="86.9" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2019" data-share="11.2" data-complete="true"/><rect x="202.3" y="206.2" width="12.5" height="133.8" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2019" data-share="17.3" data-complete="true"/><rect x="217.1" y="266.8" width="12.5" height="73.2" fill="#597ba0" opacity="1.0" class="bar" data-venue="naacl" data-year="2019" data-share="9.5" data-complete="true"/><rect x="231.8" y="92.9" width="12.5" height="247.1" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2019" data-share="32.0" data-complete="true"/><rect x="261.2" y="224.3" width="12.5" height="115.7" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2020" data-share="15.0" data-complete="true"/><rect x="276.0" y="228.3" width="12.5" height="111.7" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2020" data-share="14.4" data-complete="true"/><rect x="290.7" y="237.8" width="12.5" height="102.2" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2020" data-share="13.2" data-complete="true"/><rect x="305.4" y="178.8" width="12.5" height="161.2" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2020" data-share="20.9" data-complete="true"/><rect x="320.2" y="340.0" width="12.5" height="0.0" fill="#597ba0" opacity="0.45" class="bar" data-venue="naacl" data-year="2020" data-share="0.0" data-complete="false"/><rect x="334.9" y="57.8" width="12.5" height="282.2" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2020" data-share="36.5" data-complete="true"/><rect x="364.4" y="254.4" width="12.5" height="85.6" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2021" data-share="11.1" data-complete="true"/><rect x="379.1" y="237.8" width="12.5" height="102.2" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2021" data-share="13.2" data-complete="true"/><rect x="393.8" y="236.6" width="12.5" height="103.4" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2021" data-share="13.4" data-complete="true"/><rect x="408.6" y="197.3" width="12.5" height="142.7" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2021" data-share="18.5" data-complete="true"/><rect x="423.3" y="282.5" width="12.5" height="57.5" fill="#597ba0" opacity="1.0" class="bar" data-venue="naacl" data-year="2021" data-share="7.4" data-complete="true"/><rect x="438.0" y="58.5" width="12.5" height="281.5" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2021" data-share="36.4" data-complete="true"/><rect x="467.5" y="262.3" width="12.5" height="77.7" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2022" data-share="10.0" data-complete="true"/><rect x="482.2" y="248.1" width="12.5" height="91.9" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2022" data-share="11.9" data-complete="true"/><rect x="497.0" y="218.6" width="12.5" height="121.4" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2022" data-share="15.7" data-complete="true"/><rect x="511.7" y="203.2" width="12.5" height="136.8" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2022" data-share="17.7" data-complete="true"/><rect x="526.4" y="291.0" width="12.5" height="49.0" fill="#597ba0" opacity="1.0" class="bar" data-venue="naacl" data-year="2022" data-share="6.3" data-complete="true"/><rect x="541.2" y="43.7" width="12.5" height="296.3" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2022" data-share="38.3" data-complete="true"/><rect x="570.6" y="244.9" width="12.5" height="95.1" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2023" data-share="12.3" data-complete="true"/><rect x="585.4" y="247.3" width="12.5" height="92.7" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2023" data-share="12.0" data-complete="true"/><rect x="600.1" y="201.8" width="12.5" height="138.2" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2023" data-share="17.9" data-complete="true"/><rect x="614.8" y="178.1" width="12.5" height="161.9" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2023" data-share="20.9" data-complete="true"/><rect x="629.6" y="340.0" width="12.5" height="0.0" fill="#597ba0" opacity="0.45" class="bar" data-venue="naacl" data-year="2023" data-share="0.0" data-complete="false"/><rect x="644.3" y="55.0" width="12.5" height="285.0" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2023" data-share="36.9" data-complete="true"/><rect x="673.8" y="277.8" width="12.5" height="62.2" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2024" data-share="8.1" data-complete="true"/><rect x="688.5" y="256.0" width="12.5" height="84.0" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2024" data-share="10.9" data-complete="true"/><rect x="703.2" y="190.4" width="12.5" height="149.6" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2024" data-share="19.4" data-complete="true"/><rect x="717.9" y="167.2" width="12.5" height="172.8" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2024" data-share="22.4" data-complete="true"/><rect x="732.7" y="302.8" width="12.5" height="37.2" fill="#597ba0" opacity="1.0" class="bar" data-venue="naacl" data-year="2024" data-share="4.8" data-complete="true"/><rect x="747.4" y="72.9" width="12.5" height="267.1" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2024" data-share="34.6" data-complete="true"/><rect x="776.9" y="260.6" width="12.5" height="79.4" fill="#3b5f8a" opacity="1.0" class="bar" data-venue="acl" data-year="2025" data-share="10.3" data-complete="true"/><rect x="791.6" y="255.5" width="12.5" height="84.5" fill="#3c718a" opacity="1.0" class="bar" data-venue="emnlp" data-year="2025" data-share="10.9" data-complete="true"/><rect x="806.3" y="167.0" width="12.5" height="173.0" fill="#3d848a" opacity="1.0" class="bar" data-venue="iclr" data-year="2025" data-share="22.4" data-complete="true"/><rect x="821.1" y="184.4" width="12.5" height="155.6" fill="#468891" opacity="1.0" class="bar" data-venue="icml" data-year="2025" data-share="20.1" data-complete="true"/><rect x="835.8" y="306.5" width="12.5" height="33.5" fill="#597ba0" opacity="1.0" class="bar" data-venue="naacl" data-year="2025" data-share="4.3" data-complete="true"/><rect x="850.5" y="93.0" width="12.5" height="247.0" fill="#6b6eaf" opacity="1.0" class="bar" data-venue="neurips" data-year="2025" data-share="31.9" data-complete="true"/>
+    <text x="106.6" y="360" text-anchor="middle" class="axis-label">2018</text><text x="209.7" y="360" text-anchor="middle" class="axis-label">2019</text><text x="312.8" y="360" text-anchor="middle" class="axis-label">2020</text><text x="415.9" y="360" text-anchor="middle" class="axis-label">2021</text><text x="519.1" y="360" text-anchor="middle" class="axis-label">2022</text><text x="622.2" y="360" text-anchor="middle" class="axis-label">2023</text><text x="725.3" y="360" text-anchor="middle" class="axis-label">2024</text><text x="828.4" y="360" text-anchor="middle" class="axis-label">2025</text>
+  </g>
+</svg>
+<p class="note">Faded bars = incomplete venue-year (conference not yet concluded or proceedings not yet published).</p>
+
+</div>
+
+<!-- Deliberately a direct child of <body>, not nested inside either .panel: .panel has
+     backdrop-filter, and a backdrop-filter/filter/transform ANYWHERE in an element's
+     ancestor chain creates a new containing block for its position:fixed descendants in
+     modern browsers, meaning "fixed" stops being relative to the viewport and becomes
+     relative to that filtered ancestor instead. That's the actual root cause of the
+     reported off-page tooltip: found by instrumenting getBoundingClientRect() and
+     discovering the tooltip's computed style.left/top (correct, viewport-relative math)
+     didn't match its actual on-screen position at all once backdrop-filter entered the
+     picture. The positionTooltip() viewport math below is only correct if #tooltip's
+     containing block truly is the viewport, which requires it living outside any
+     filtered ancestor. -->
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+const hoverGuide = document.getElementById('hover-guide');
+
+// Fixed cursor+14px offset ran the tooltip off the right edge for points/bars on the
+// right side of a wide chart (reported: rightmost point's box lands off-page). Measures
+// the tooltip's own rendered size, so this must run AFTER innerHTML is set, not before,
+// and flips to the opposite side of the cursor whenever the default placement would
+// overflow the viewport, same logic a well-behaved chart library's tooltip uses.
+function positionTooltip(e) {
+  const pad = 16;
+  const rect = tooltip.getBoundingClientRect();
+  let left = e.clientX + pad;
+  let top = e.clientY + pad;
+  if (left + rect.width > window.innerWidth - 8) {
+    left = e.clientX - rect.width - pad;
+  }
+  if (top + rect.height > window.innerHeight - 8) {
+    top = e.clientY - rect.height - pad;
+  }
+  tooltip.style.left = Math.max(8, left) + 'px';
+  tooltip.style.top = Math.max(8, top) + 'px';
+}
+
+document.querySelectorAll('.trend-pt').forEach(pt => {
+  pt.addEventListener('mouseenter', e => {
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<b>${pt.dataset.name}</b><br>${pt.dataset.year}: ${pt.dataset.val}%`;
+    hoverGuide.setAttribute('x1', pt.dataset.x);
+    hoverGuide.setAttribute('x2', pt.dataset.x);
+    hoverGuide.classList.add('visible');
+    positionTooltip(e);
+  });
+  pt.addEventListener('mousemove', positionTooltip);
+  pt.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    hoverGuide.classList.remove('visible');
+  });
+});
+document.querySelectorAll('.legend-item').forEach(item => {
+  item.addEventListener('mouseenter', () => {
+    const s = item.dataset.series;
+    document.querySelectorAll('.trend-line').forEach(l => {
+      if (l.dataset.series !== s) l.classList.add('dim');
+    });
+  });
+  item.addEventListener('mouseleave', () => {
+    document.querySelectorAll('.trend-line').forEach(l => l.classList.remove('dim'));
+  });
+});
+document.querySelectorAll('.bar').forEach(bar => {
+  bar.addEventListener('mouseenter', e => {
+    tooltip.style.display = 'block';
+    // Paper count dropped from here deliberately: the bar's own height against the
+    // y-axis already shows that number directly, so repeating it in the tooltip was
+    // redundant. Share is the one number the chart can't show visually, so that's what
+    // the tooltip is for.
+    const complete = bar.dataset.complete === 'true'
+      ? '' : ' <span style="opacity:0.6">(partial)</span>';
+    tooltip.innerHTML = `<b>${bar.dataset.venue.toUpperCase()} ${bar.dataset.year}</b><br>${bar.dataset.share}% of that year's total${complete}`;
+    positionTooltip(e);
+  });
+  bar.addEventListener('mousemove', positionTooltip);
+  bar.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+# NeurIPS main-track expected counts, read from the listing pages. Decision: 006 pattern.
+#
+# Three markup eras, all handled via the `data-track` attribute rather than the CSS
+# class (which is absent 2018-2021, "datasets_and_benchmarks" in 2022-23, and
+# "datasets_and_benchmarks_track" in 2024+):
+#   2018-2021  data-track="none"  (predates the D&B track; everything is main)
+#   2022-2024  data-track="conference" alongside D&B
+#   2025       proceedings split into volumes; the year page lists only side tracks
+#              plus a pointer to /paper_files/paper/2025/vol38-main-conference
+#
+# 2026 absent: conference is December 2026, not yet held.
+
+[[collection]]
+year = 2018
+expected = 1009
+
+[[collection]]
+year = 2019
+expected = 1428
+
+[[collection]]
+year = 2020
+expected = 1898
+
+[[collection]]
+year = 2021
+expected = 2334
+
+[[collection]]
+year = 2022
+expected = 2671
+
+[[collection]]
+year = 2023
+expected = 3218
+
+[[collection]]
+year = 2024
+expected = 4034
+
+[[collection]]
+year = 2025
+expected = 5286
+note = "volume-split proceedings; main conference at vol38-main-conference"
