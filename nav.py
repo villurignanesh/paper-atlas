@@ -65,11 +65,12 @@ _PAGES = [
     ("map", "index.html", "Map"),
     ("browse", "table.html", "Browse"),
     ("analytics", "analytics.html", "Analytics"),
+    ("blog", "blog.html", "Blog"),
 ]
 
 
 def nav_html(active: str) -> str:
-    """active is one of 'map', 'browse', 'analytics' -- the current page, shown inverted."""
+    """active is one of 'map', 'browse', 'analytics', 'blog' -- the current page, shown inverted."""
     links = "".join(
         f'<a href="{href}" class="pa-nav-link{" active" if key == active else ""}">{label}</a>'
         for key, href, label in _PAGES

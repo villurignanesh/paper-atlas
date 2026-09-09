@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Paper Atlas &middot; Blog</title>
+<style>
+@font-face {
+    font-family: "Valley Sans";
+    src: url("fonts/ValleySans-Variable.woff2") format("woff2-variations"),
+         url("fonts/ValleySans-Variable.woff2") format("woff2");
+    font-weight: 100 900;
+}
+:root { --bg: #14181f; --panel: rgba(24,28,38,0.75); --text: #e8e8f0; --accent: #6b6eaf; }
+* { box-sizing: border-box; }
+body {
+    background: var(--bg); color: var(--text); margin: 0; padding: 96px 24px 80px;
+    font-family: "Valley Sans", -apple-system, sans-serif; font-weight: 400;
+}
+
+#pa-nav {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 1000;
+    display: flex; align-items: center; gap: 22px;
+    background: rgba(15, 18, 26, 0.82); backdrop-filter: blur(14px);
+    border: 1px solid rgba(107, 111, 176, 0.35);
+    border-radius: 999px;
+    padding: 7px 8px 7px 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    font-family: var(--ui-font, "Valley Sans", -apple-system, sans-serif);
+}
+#pa-nav-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 14px; color: #e8e8f0; text-decoration: none;
+    white-space: nowrap;
+}
+#pa-nav-brand svg { width: 20px; height: 20px; flex-shrink: 0; }
+#pa-nav-links { display: flex; align-items: center; gap: 2px; }
+.pa-nav-link {
+    font-weight: 600; font-size: 13px; text-decoration: none;
+    color: rgba(232, 232, 240, 0.62);
+    padding: 7px 15px; border-radius: 999px;
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+.pa-nav-link:hover { color: #e8e8f0; }
+.pa-nav-link.active { color: #0d0f14; background: #e8e8f0; }
+.pa-nav-link.active:hover { color: #0d0f14; }
+
+.post {
+    background: var(--panel); backdrop-filter: blur(8px);
+    border: 1px solid rgba(107,111,176,0.35); border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    padding: 48px; max-width: 720px; margin: 0 auto;
+}
+.post .byline { opacity: 0.55; font-size: 13px; margin: -8px 0 32px; }
+.post h1 {
+    font-weight: 700; font-size: 30px; line-height: 1.28; margin: 0 0 4px;
+}
+.post h2 {
+    font-weight: 600; font-size: 20px; margin: 40px 0 12px;
+}
+.post p { line-height: 1.65; font-size: 15.5px; margin: 0 0 18px; opacity: 0.92; }
+.post ul { margin: 0 0 18px; padding-left: 22px; }
+.post li { line-height: 1.6; font-size: 15.5px; margin-bottom: 10px; opacity: 0.92; }
+.post a { color: #9a9de0; text-decoration: none; border-bottom: 1px solid rgba(154,157,224,0.35); }
+.post a:hover { border-bottom-color: #9a9de0; }
+.post code {
+    background: rgba(107,111,176,0.18); border-radius: 4px; padding: 1px 6px;
+    font-family: "SF Mono", Menlo, monospace; font-size: 0.88em;
+}
+</style>
+</head>
+<body>
+<nav id="pa-nav"><a href="index.html" id="pa-nav-brand"><svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="pa-logo-icon">
+  <line x1="8" y1="10" x2="16" y2="7" stroke="#6b6fb0" stroke-width="1.4" opacity="0.7"/>
+  <line x1="16" y1="7" x2="24" y2="12" stroke="#8567a8" stroke-width="1.4" opacity="0.7"/>
+  <line x1="8" y1="10" x2="10" y2="20" stroke="#3e8e8a" stroke-width="1.4" opacity="0.7"/>
+  <line x1="16" y1="7" x2="18" y2="18" stroke="#3b5f8a" stroke-width="1.4" opacity="0.7"/>
+  <line x1="24" y1="12" x2="18" y2="18" stroke="#6b6fb0" stroke-width="1.4" opacity="0.7"/>
+  <line x1="10" y1="20" x2="18" y2="18" stroke="#3e8e8a" stroke-width="1.4" opacity="0.7"/>
+  <line x1="10" y1="20" x2="17" y2="25" stroke="#8567a8" stroke-width="1.4" opacity="0.7"/>
+  <line x1="18" y1="18" x2="17" y2="25" stroke="#3b5f8a" stroke-width="1.4" opacity="0.7"/>
+  <circle cx="8" cy="10" r="3.1" fill="#3b5f8a"/>
+  <circle cx="16" cy="7" r="2.5" fill="#3e8e8a"/>
+  <circle cx="24" cy="12" r="2.8" fill="#6b6fb0"/>
+  <circle cx="18" cy="18" r="3.4" fill="#8567a8"/>
+  <circle cx="10" cy="20" r="2.3" fill="#3e8e8a"/>
+  <circle cx="17" cy="25" r="2.6" fill="#3b5f8a"/>
+</svg><span>Paper Atlas</span></a><div id="pa-nav-links"><a href="index.html" class="pa-nav-link">Map</a><a href="table.html" class="pa-nav-link">Browse</a><a href="analytics.html" class="pa-nav-link">Analytics</a><a href="blog.html" class="pa-nav-link active">Blog</a></div></nav>
+<article class="post">
+<h1>Paper Atlas: mapping 70,861 AI papers so you can actually see the field</h1>
+<div class="byline">September 2026</div>
+<p>Six months ago I needed to do a literature review and realized I had no good way to see the shape of a field with tens of thousands of papers in it. Google Scholar gives you a ranked list. arXiv gives you a firehose. Neither tells you where the clusters are, which ones are growing, or where your own reading sits relative to everything else.</p>
+<p>So I built <a href="https://villurignanesh.github.io/paper-atlas/" target="_blank" rel="noopener">Paper Atlas</a>: an interactive semantic map of every accepted paper from six major AI/ML venues, NeurIPS, ICML, ICLR, ACL, EMNLP, and NAACL, 2018 through 2026. 70,861 papers, embedded, projected, clustered into a three-level topic hierarchy, and dropped onto one map you can pan and zoom like a piece of geography.</p>
+<p>It&#x27;s free, it&#x27;s a static site (no backend, nothing to sign up for), and the code is <a href="https://github.com/villurignanesh/paper-atlas" target="_blank" rel="noopener">open source</a>.</p>
+<h2>Why not just use Paper Copilot</h2>
+<p><a href="https://papercopilot.com" target="_blank" rel="noopener">Paper Copilot</a> already does something like this well; it tracks submission stats, acceptance rates, and reviewer dynamics across the same kind of venue set, and it&#x27;s genuinely useful. What it doesn&#x27;t have is a semantic map. You can see <em>how many</em> papers a venue accepted, but not <em>what they were about</em> or how that&#x27;s shifted.</p>
+<p><a href="https://newsletter.languagemodels.co/p/the-illustrated-neurips-2025-a-visual" target="_blank" rel="noopener">Jay Alammar&#x27;s Illustrated NeurIPS 2025</a> is closer to what I mean, an interactive map of one conference&#x27;s accepted papers, clustered and labeled. It&#x27;s a great piece of work, and it&#x27;s part of what convinced me this was worth building properly. Paper Atlas is the same idea taken further: six venues instead of one, eight years instead of one, and a three-level topic hierarchy (902 fine-grained clusters, 44 mid-level topics, 8 top-level research areas) instead of a flat one, so you can zoom from &quot;the whole field&quot; down to &quot;this one narrow sub-problem&quot; without losing context.</p>
+<h2>How it actually works</h2>
+<p>The short version: title and abstract go through <code>Qwen3-Embedding-8B</code>, get projected to 2D with UMAP for display and separately to 10D purely for clustering, get grouped with HDBSCAN, and get named by an LLM reading each cluster&#x27;s most distinctive keywords and a sample of its titles.</p>
+<p>The longer version is that almost every step in that pipeline was a measured decision, not a default. A few examples, because I think the &quot;how&quot; is more interesting than the one-line summary:</p>
+<ul><li><strong>Citation-trained vs. semantics-trained embeddings.</strong> The obvious choice for scientific papers is something like SPECTER2, trained on citation graphs. I ran a three-way bake-off (SPECTER2, a general embedder, and Qwen3-8B) against the one piece of independent ground truth in the corpus, ICLR&#x27;s own author-supplied keywords, and the citation-trained model came in <em>worse</em> on keyword agreement than a general-purpose one, with no compensating advantage on the &quot;does it separate venues too aggressively&quot; check I ran to test the opposite failure mode. That result surprised me enough that it&#x27;s its own writeup in the repo.</li><li><strong>All three hierarchy levels come from the same clustering</strong>, at three different resolutions of the same underlying density tree, not three independent runs that might disagree with each other. I validated the nesting (does every fine-grained cluster actually sit inside the coarse cluster the map says it does) at 97-100% across every resolution I tested, rather than assuming a coarser cut of the same tree would nest cleanly.</li><li><strong>The clustering isn&#x27;t perfectly stable across random seeds</strong> (a measured ARI of about 0.57 between runs), and I&#x27;d rather say that plainly than pretend the map is more deterministic than it is. Every non-trivial choice like this is written up in the repo&#x27;s <a href="https://github.com/villurignanesh/paper-atlas/tree/master/docs/decisions" target="_blank" rel="noopener">decision log</a>, including the ones that didn&#x27;t work.</li></ul>
+<h2>What the map actually shows</h2>
+<p>A few things I only noticed once the whole corpus was on one screen:</p>
+<p><strong>ICLR grew 11x since 2018</strong> (336 accepted papers to 3,703), by far the fastest of the six venues. NeurIPS and ICML both grew about 5x over the same period; ACL, EMNLP, and NAACL grew more slowly.</p>
+<p><strong>&quot;NLP and LLMs&quot; has held a remarkably stable ~45% share of the whole corpus since 2018</strong>, not the runaway takeover the last two years of hype might suggest. What <em>did</em> move a lot: Optimization &amp; Federated Learning dropped from 15.5% of the corpus to 6.4% (the single biggest swing on the map), while Multimodal Understanding, 3D Generation, and Graph Neural Networks &amp; Molecular AI each roughly doubled or better their share.</p>
+<p>You can see both of those directly on the <a href="https://villurignanesh.github.io/paper-atlas/analytics.html" target="_blank" rel="noopener">analytics page</a>, which turns the same clustering into trend lines instead of a spatial map.</p>
+<h2>What&#x27;s next</h2>
+<p>The <a href="https://villurignanesh.github.io/paper-atlas/table.html" target="_blank" rel="noopener">Browse</a> page is a searchable, filterable table of every paper if you&#x27;d rather scan than explore spatially. The <a href="https://villurignanesh.github.io/paper-atlas/" target="_blank" rel="noopener">main map</a> is where the clustering actually earns its keep, hover anything to see its authors, topic, and abstract; search to highlight matches; the histogram at the bottom brushes by year.</p>
+<p>It&#x27;s open source, and the <a href="https://github.com/villurignanesh/paper-atlas/blob/master/CONTRIBUTING.md" target="_blank" rel="noopener">contributing guide</a> and <a href="https://github.com/villurignanesh/paper-atlas/issues" target="_blank" rel="noopener">open issues</a> have a real backlog: richer per-paper summaries, institution-level rankings, submission/acceptance rate tracking, and a few things that are genuinely hard and honestly scoped as such, not quick wins dressed up as easy.</p>
+<p>If you build something on top of the data or find something interesting in the map that I haven&#x27;t, I&#x27;d like to hear about it.</p>
+</article>
+</body>
+</html>
