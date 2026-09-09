@@ -27,6 +27,9 @@ def inline(text):
     return text
 
 
+IMAGE_RE = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)$")
+
+
 def render(md):
     lines = md.split("\n")
     out, para, list_items = [], [], []
@@ -46,9 +49,21 @@ def render(md):
 
     for line in lines:
         stripped = line.strip()
+        img = IMAGE_RE.match(stripped)
         if not stripped:
             flush_para()
             flush_list()
+        elif img:
+            # Standalone line, its own figure block, not wrapped in <p>: a caption
+            # needs its own element and img is a block-level visual, not inline text.
+            flush_para()
+            flush_list()
+            alt, src = html.escape(img.group(1)), html.escape(img.group(2))
+            out.append(
+                f'<figure><img src="{src}" alt="{alt}" loading="lazy">'
+                + (f'<figcaption>{inline(img.group(1))}</figcaption>' if img.group(1) else '')
+                + '</figure>'
+            )
         elif stripped.startswith("## "):
             flush_para()
             flush_list()
@@ -123,6 +138,14 @@ body {{
 .post code {{
     background: rgba(107,111,176,0.18); border-radius: 4px; padding: 1px 6px;
     font-family: "SF Mono", Menlo, monospace; font-size: 0.88em;
+}}
+.post figure {{ margin: 8px 0 24px; }}
+.post figure img {{
+    width: 100%; display: block; border-radius: 8px;
+    border: 1px solid rgba(107,111,176,0.35);
+}}
+.post figcaption {{
+    font-size: 12.5px; opacity: 0.55; margin-top: 8px; text-align: center;
 }}
 </style>
 </head>
