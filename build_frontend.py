@@ -375,6 +375,15 @@ label_strings = np.array([
     cluster_labels.get(str(l), {}).get("label", "Unclustered") if l >= 0 else "Unclustered"
     for l in labels
 ])
+# c-TF-IDF keywords are per-cluster, not per-paper (paper_atlas/labeling/ctfidf.py):
+# every paper in a cluster shares the same top-10 list. Folded into search_text below
+# alongside the cluster label, same coarse-grained-signal-plus-title pattern already in
+# use there, so a query like "dpo" matches every paper in a DPO-related cluster even
+# when that specific paper's own title never uses the word, not just an exact title hit.
+keyword_strings = np.array([
+    " ".join(cluster_labels.get(str(l), {}).get("keywords", [])) if l >= 0 else ""
+    for l in labels
+])
 # *label_layers ordering is finest-first, coarsest-last (create_interactive_plot's own
 # documented requirement): this second array is what activates the native topic-tree
 # nesting and the zoom-based label reveal (hierarchical_collision_priority), instead of
@@ -412,7 +421,11 @@ extra = pd.DataFrame({
     # query narrows the MAP correctly but the sidebar kept listing all 902 names
     # regardless, which read as broken. Dropped the tree; folded cluster label into the
     # searchable text instead, so search covers topic names, not just paper titles.
-    "search_text": [f"{cl} {ti}" for cl, ti in zip(label_strings, titles_o)],
+    # Cluster keywords folded in too: cheap recall improvement using data already
+    # computed for labeling, no new dependency, still plain substring match under the
+    # hood (datamapplot's searchText: lowercase, indexOf() >= 0), not real semantic
+    # search. That's tracked separately as a real future phase, not attempted here.
+    "search_text": [f"{cl} {kw} {ti}" for cl, kw, ti in zip(label_strings, keyword_strings, titles_o)],
 })
 
 # Giving up on click-to-filter-map-points from the topic tree after three failed
