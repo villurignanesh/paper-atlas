@@ -8,7 +8,7 @@ so pulling in a general markdown library would be a dependency for five regexes.
 """
 import html
 import re
-from nav import NAV_CSS, nav_html
+from nav import NAV_CSS, nav_html, GTAG_SNIPPET
 
 SRC = "blog/paper-atlas-launch.md"
 raw = open(SRC).read()
@@ -101,6 +101,7 @@ body_html = (
 PAGE = f'''<!doctype html>
 <html>
 <head>
+{GTAG_SNIPPET}
 <meta charset="utf-8">
 <title>Paper Atlas &middot; Blog</title>
 <style>

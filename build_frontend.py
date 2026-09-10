@@ -12,7 +12,7 @@ import pandas as pd
 import datamapplot
 import matplotlib.colors as mcolors
 from paper_atlas.embed import load_corpus
-from nav import LOGO_SVG, NAV_CSS, nav_html
+from nav import LOGO_SVG, NAV_CSS, nav_html, GTAG_SNIPPET
 
 # Cool/muted palette (blues -> teals -> violets), restricted to that hue arc rather than
 # the library's default full hue wheel, deliberate, not a tuning knob left at default.
@@ -624,4 +624,10 @@ plot = datamapplot.create_interactive_plot(
     inline_data=True, darkmode=True,
 )
 plot.save("index.html")
+# create_interactive_plot's own jinja2 template owns <head> entirely (no custom_css/
+# custom_js hook reaches it), so the analytics tag is inserted by post-processing the
+# saved file rather than fighting the library's template. Exactly one <head> in the
+# saved output, so a single un-scoped replace is safe (str.replace, not regex).
+html_out = open("index.html").read().replace("<head>", f"<head>\n{GTAG_SNIPPET}", 1)
+open("index.html", "w").write(html_out)
 print("wrote index.html")

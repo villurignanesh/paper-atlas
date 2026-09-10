@@ -13,6 +13,19 @@ page's background is itself near-black, so a flat black pill would have no separ
 from it, where their reference page is on a white background.
 """
 
+# Google Analytics (gtag.js), one property (G-YKFFPVN4WL) across all four pages.
+# Defined once here rather than pasted four times so a future tag change (or removal)
+# only ever happens in one place. Google's own install instructions ask for this
+# immediately after <head> opens, not appended after other head content, for
+# accurate early-pageview tracking.
+GTAG_SNIPPET = """<script async src="https://www.googletagmanager.com/gtag/js?id=G-YKFFPVN4WL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-YKFFPVN4WL');
+</script>"""
+
 LOGO_SVG = '''<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="pa-logo-icon">
   <line x1="8" y1="10" x2="16" y2="7" stroke="#6b6fb0" stroke-width="1.4" opacity="0.7"/>
   <line x1="16" y1="7" x2="24" y2="12" stroke="#8567a8" stroke-width="1.4" opacity="0.7"/>

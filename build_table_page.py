@@ -8,7 +8,7 @@ even same-directory resource loading in some cases; inline sidesteps that risk
 entirely, same reasoning as self-hosting the font instead of a CDN fetch.
 """
 import json
-from nav import NAV_CSS, nav_html
+from nav import NAV_CSS, nav_html, GTAG_SNIPPET
 
 rows = json.load(open("data/table_data.json"))
 DATA_JSON = json.dumps(rows, separators=(",", ":"))
@@ -21,6 +21,7 @@ DATA_JSON = DATA_JSON.replace("</", "<\\/")
 PAGE = f'''<!doctype html>
 <html>
 <head>
+{GTAG_SNIPPET}
 <meta charset="utf-8">
 <title>Paper Atlas · Browse</title>
 <style>

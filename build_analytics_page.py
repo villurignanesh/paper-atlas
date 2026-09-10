@@ -6,7 +6,7 @@ dark glass panels.
 """
 import html
 import json
-from nav import NAV_CSS, nav_html
+from nav import NAV_CSS, nav_html, GTAG_SNIPPET
 
 data = json.load(open("data/analytics.json"))
 years = data["mega_share_by_year"]["years"]
@@ -140,6 +140,7 @@ chart2 = f'''
 PAGE = f'''<!doctype html>
 <html>
 <head>
+{GTAG_SNIPPET}
 <meta charset="utf-8">
 <title>Paper Atlas · Analytics</title>
 <style>
