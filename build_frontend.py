@@ -515,13 +515,18 @@ TOPIC_TREE_HIGHLIGHT_JS = """
 # styled spans for the bold+italic-serif pairing) AND the page's <title> tag
 # (deckgl_template.html.jinja2 does <title>{{ title }}</title>, no escaping, no separate
 # plain-text variant). Reported: the browser tab literally showed the raw
-# "<span class=\"pa-headline..." markup. Fixed with a plain document.title override
+# "<span class=\"pa-headline..." markup. Fixed with a plain document.title override,
 # rather than passing a plain-text title= (which would have meant giving up the
 # bold+serif pairing on the canvas headline entirely). Matches the "Paper Atlas · X"
 # convention table.html/analytics.html already use for their <title> tags.
-TAB_TITLE_JS = """
-document.title = "Paper Atlas · Map";
-"""
+#
+# THIS FIX USED TO LIVE IN custom_js (a TAB_TITLE_JS string), which datamapplot
+# inserts near the end of body, after all embedded point/label/hover data. Harmless
+# for the visible tab (nobody's watching it flicker), but GA's automatic page_view
+# fires from <head> almost immediately on load, long before custom_js runs, so it was
+# reading the raw, unescaped <title> markup as the page title. Moved to a head-level
+# post-processing insertion (below, ahead of GTAG_SNIPPET) so the title is already
+# correct by the time gtag's auto-pageview reads document.title.
 
 TOPIC_TREE_DEDUPE_JS = """
 document.addEventListener('datamapLabelsLoaded', function(e) {
@@ -596,7 +601,7 @@ plot = datamapplot.create_interactive_plot(
     # topic_tree.js: `this.container.style.fontSize = this.fontSize`), not per-item, so
     # setting it here rather than fighting it from CSS keeps one source of truth for size.
     topic_tree_kwds={"font_size": "14px"},
-    custom_js=SEARCH_POLISH_JS + "\n" + TOPIC_TREE_HIGHLIGHT_JS + "\n" + TOPIC_TREE_DEDUPE_JS + "\n" + TAB_TITLE_JS,
+    custom_js=SEARCH_POLISH_JS + "\n" + TOPIC_TREE_HIGHLIGHT_JS + "\n" + TOPIC_TREE_DEDUPE_JS,
     # Clicking opens the paper directly. Originally relied on a link INSIDE the hover
     # tooltip, but moving the cursor from the point to the tooltip to click it made the
     # tooltip disappear first (the tooltip tracks point hover, not itself). on_click
@@ -625,9 +630,18 @@ plot = datamapplot.create_interactive_plot(
 )
 plot.save("index.html")
 # create_interactive_plot's own jinja2 template owns <head> entirely (no custom_css/
-# custom_js hook reaches it), so the analytics tag is inserted by post-processing the
-# saved file rather than fighting the library's template. Exactly one <head> in the
-# saved output, so a single un-scoped replace is safe (str.replace, not regex).
-html_out = open("index.html").read().replace("<head>", f"<head>\n{GTAG_SNIPPET}", 1)
+# custom_js hook reaches it), so both the tab-title fix and the analytics tag are
+# inserted by post-processing the saved file rather than fighting the library's
+# template. Title fix goes FIRST, ahead of GTAG_SNIPPET: gtag's automatic page_view
+# reads document.title as soon as gtag('config', ...) runs, and title= above is
+# embedded raw into <title> (needed for the on-canvas bold+serif headline pairing),
+# so without this ordering GA would record the raw "<span class=..." markup as the
+# page title, not "Paper Atlas · Map". Exactly one <head> in the saved output, so a
+# single un-scoped replace is safe (str.replace, not regex).
+TITLE_FIX_JS = '<script>document.title = "Paper Atlas · Map";</script>'
+html_out = (
+    open("index.html").read()
+    .replace("<head>", f"<head>\n{TITLE_FIX_JS}\n{GTAG_SNIPPET}", 1)
+)
 open("index.html", "w").write(html_out)
 print("wrote index.html")
