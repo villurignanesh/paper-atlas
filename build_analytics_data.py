@@ -3,49 +3,19 @@ corpus over time. Pure aggregation of data already computed by build_frontend.py
 loading logic: no new clustering, no LLM calls, no GPU.
 """
 import json
-import numpy as np
 import pandas as pd
-from paper_atlas.embed import load_corpus
+from paper_atlas.venue_trends import (
+    LAST_COMPLETE_YEAR, category_columns, load_labeled_papers, venue_year_table,
+)
 
-t = load_corpus()
-ids = t.column("paper_id").to_pylist()
-years = t.column("year").to_pylist()
-venues = t.column("venue").to_pylist()
-
-# Same alignment pattern as build_frontend.py
-mega = np.load("data/knn/megacat_mcs2000_ms5.npz", allow_pickle=False)
-top = np.load("data/knn/midlevel_mcs400_ms5.npz", allow_pickle=False)
-clust = np.load("data/knn/cluster_umap10d_mcs15_ms5.npz", allow_pickle=False)
-megacat_labels_json = json.load(open("data/knn/megacat_labels.json"))
-
-pos = {p: i for i, p in enumerate(ids)}
-order = [pos[p] for p in mega["ids"]]
-years_o = [years[i] for i in order]
-venues_o = [venues[i] for i in order]
-
-labels, top_labels, mega_labels = clust["labels"], top["labels"].copy(), mega["labels"].copy()
-
-# Same orphan-handling as build_frontend.py, needed for consistent totals
-for leaf_id in range(int(labels.max()) + 1):
-    idx = np.where(labels == leaf_id)[0]
-    if len(idx) == 0:
-        continue
-    if (top_labels[idx] >= 0).sum() == 0:
-        top_labels[idx] = -2
-for group_val in np.unique(top_labels):
-    idx = np.where(top_labels == group_val)[0]
-    if (mega_labels[idx] >= 0).sum() == 0:
-        mega_labels[idx] = -3
-
-mega_names = {int(k): v["label"] for k, v in megacat_labels_json.items()}
-mega_names[-3] = "Cross-Cutting & Specialized Research"
-mega_names[-1] = "Unclustered"
-
-df = pd.DataFrame({"year": years_o, "venue": venues_o, "mega": mega_labels})
+# Loading + orphan remap live in paper_atlas/venue_trends.py so the venue-split numbers
+# and report_cell_sizes.py share one code path with this pooled chart.
+df, mega_names = load_labeled_papers()
+df_all = df  # unfiltered; the venue table applies the same year cut itself
 
 # 2026 excluded: structurally partial for most venues (001-scope.md), would misleadingly
 # read as a collapse in every trend line rather than "the year isn't over yet".
-df = df[df["year"] <= 2025]
+df = df[df["year"] <= LAST_COMPLETE_YEAR]
 
 # Mega-category share of corpus, by year. "Unclustered" (-1, genuine HDBSCAN noise at
 # this clustering resolution, not a research area) dropped from THIS chart specifically:
@@ -70,12 +40,28 @@ manifest = pd.read_parquet("data/manifest.parquet")
 manifest = manifest[["venue", "year", "n_papers", "complete"]]
 manifest = manifest[manifest["year"] <= 2025]
 
+# Per-venue series (issue #4). Additive: the two keys below are untouched. Shares are
+# within each venue-year (decision 013), over labeled papers only (-1 dropped), same
+# rule as the pooled chart. Counts are emitted too so the page can show n, not just %.
+vy = venue_year_table(df_all, mega_names)
+cats = category_columns(vy)
+vy_records = []
+for _, r in vy.iterrows():
+    vy_records.append({
+        "venue": r["venue"], "year": int(r["year"]),
+        "n_total": int(r["n_total"]), "n_labeled": int(r["n_labeled"]),
+        "n_noise": int(r["n_noise"]), "noise_rate": float(r["noise_rate"]),
+        "counts": {c: int(r[c]) for c in cats},
+        "share_pct": {c: round(100 * r[c] / r["n_labeled"], 2) for c in cats},
+    })
+
 out = {
     "mega_share_by_year": {
         "years": share_pct.index.tolist(),
         "series": {col: share_pct[col].tolist() for col in share_pct.columns},
     },
     "venue_counts_by_year": manifest.to_dict(orient="records"),
+    "venue_year_mega": {"categories": cats, "rows": vy_records},
 }
 json.dump(out, open("data/analytics.json", "w"), indent=2)
 print(f"mega categories: {len(share_pct.columns)}")
