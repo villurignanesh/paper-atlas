@@ -1,10 +1,14 @@
 """Query-core contract checks using a small, intentionally inconsistent corpus."""
 
+import asyncio
 import json
+import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
+from mcp import Client, StdioServerParameters
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -64,6 +68,39 @@ class QueryCoreTest(unittest.TestCase):
                  ids=self.ids[:-1], labels=[7, 7, 8])
         with self.assertRaisesRegex(ValueError, "do not match"):
             PaperCorpus(self.root)
+
+    def test_stdio_mcp_tools_and_errors(self):
+        async def exercise():
+            server = StdioServerParameters(
+                command=sys.executable,
+                args=[str(Path(__file__).resolve().parents[1] / "mcp_server.py")],
+                env={**os.environ, "PAPER_ATLAS_DATA_DIR": str(self.root)},
+            )
+            async with Client(server) as client:
+                tools = await client.list_tools()
+                self.assertEqual(
+                    {tool.name for tool in tools.tools},
+                    {"search_papers", "get_paper", "related_papers"},
+                )
+                search = await client.call_tool("search_papers", {"query": "diffusion"})
+                self.assertFalse(search.is_error)
+                self.assertEqual(search.structured_content["total_matches"], 2)
+                self.assertEqual(search.structured_content["papers"][0]["paper_id"], self.ids[1])
+                detail = await client.call_tool("get_paper", {"paper_id": self.ids[0]})
+                self.assertEqual(detail.structured_content["paper_id"], self.ids[0])
+                self.assertIn("no full-text verification", detail.structured_content["evidence_scope"])
+                peers = await client.call_tool("related_papers", {"paper_id": self.ids[0]})
+                self.assertEqual(peers.structured_content["papers"][0]["paper_id"], self.ids[1])
+                missing = await client.call_tool("get_paper", {"paper_id": "missing"})
+                self.assertTrue(missing.is_error)
+                self.assertIn("unknown paper_id", missing.content[0].text)
+                empty = await client.call_tool("search_papers", {"query": " "})
+                self.assertTrue(empty.is_error)
+                self.assertIn("search term", empty.content[0].text)
+                invalid = await client.call_tool("search_papers", {"query": "diffusion", "limit": 99})
+                self.assertTrue(invalid.is_error)
+
+        asyncio.run(exercise())
 
 
 if __name__ == "__main__":

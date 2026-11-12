@@ -21,6 +21,35 @@ No backend, no database, no API calls at view time. Everything is a static site;
 the heavy compute (embedding, projection, clustering, labeling) happens once,
 offline, and the result ships as a self-contained page.
 
+## Local MCP server
+
+Paper Atlas also has a local stdio MCP server for coding assistants. It exposes
+`search_papers`, `get_paper`, and `related_papers`. Search is lexical over titles,
+authors, keywords, and abstracts. Every result includes a source URL and states
+that its evidence is metadata/abstract only; related papers share a leaf cluster
+but are not ranked by similarity or asserted to cite or support one another.
+
+The server needs the processed local `data/` directory described below. After
+`uv sync`, configure an MCP client with absolute paths (replace the example root):
+
+```json
+{
+  "mcpServers": {
+    "paper-atlas": {
+      "command": "/absolute/path/to/paper-atlas/.venv/bin/python",
+      "args": ["/absolute/path/to/paper-atlas/mcp_server.py"],
+      "env": {
+        "PAPER_ATLAS_DATA_DIR": "/absolute/path/to/paper-atlas/data"
+      }
+    }
+  }
+}
+```
+
+The JSON wrapper/key can vary by client; the command, arguments, and environment
+variable are the connection contract. The server reads its corpus on the first
+tool call. There is no hosted MCP endpoint or downloadable corpus snapshot yet.
+
 ## How it's built
 
 1. **Ingest**: per-venue adapters normalize each source (OpenReview, PMLR, ACL

@@ -1,7 +1,7 @@
 # 017: Shared query core for MCP access (issue #3)
 
 Date: 2026-11-11
-Status: decided (serving architecture and first tool set); distribution and MCP SDK open
+Status: decided (serving architecture, first tool set, local SDK); distribution open
 
 ## Context
 
@@ -43,14 +43,16 @@ lexical matches against the existing metadata and abstracts; it is not query-emb
 semantic search. Related papers share an existing leaf cluster, with that relationship
 stated in the result. It does not imply citation, agreement, or direct support.
 
-The shared query core is implemented first using existing dependencies. An MCP SDK is
-not added until the maintainer explicitly approves it.
+The shared query core was implemented first using existing dependencies. On
+2026-11-12 the maintainer approved `mcp>=2,<3` for the local stdio adapter. The
+official Python SDK is used for protocol handling, schema validation, structured
+results, and recoverable tool errors; query behavior remains in the shared core.
 
 ## Still to decide
 
 - Exact result schema, ranking, and query limits after measuring the first core.
 - How a user obtains and refreshes the local corpus snapshot.
-- MCP SDK dependency and the eventual hosted transport/deployment details.
+- Eventual hosted transport/deployment details.
 
 ## What would make us revisit
 
