@@ -272,6 +272,22 @@ li { margin: 4px 0; font-size: 14px; }
 }
 #map-zoom-control button { width: 36px; height: 36px; border: 0; border-radius: 7px; background: #30364d; color: inherit; font-size: 20px; cursor: pointer; }
 #map-zoom-control input { width: 110px; accent-color: #8e92d4; }
+@media (max-width: 900px) {
+    #title-container { display: none !important; }
+    #topic-tree { position: fixed !important; top: 145px; left: 8px; margin: 0 !important; z-index: 900; }
+}
+@media (max-width: 640px) {
+    #search-container { top: 94px; width: calc(100vw - 20px) !important; }
+    #search-zoom-matches { max-width: 100%; }
+    #topic-tree {
+        top: auto !important; bottom: 76px; width: min(300px, calc(100vw - 16px)) !important;
+        max-height: 35vh; overflow: auto; touch-action: pan-y;
+    }
+    #topic-tree-body { max-width: 100% !important; max-height: calc(35vh - 60px) !important; }
+    #map-zoom-control { right: 8px; bottom: 8px; padding: 5px; }
+    #map-zoom-control button { width: 44px; height: 44px; }
+    #map-zoom-control input { width: 80px; }
+}
 #text-search::placeholder { color: rgba(232, 232, 240, 0.4) !important; font-weight: 400; }
 #search-icon {
     position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
@@ -762,7 +778,7 @@ plot.save("index.html")
 TITLE_FIX_JS = '<script>document.title = "Paper Atlas · Map";</script>'
 html_out = (
     open("index.html").read()
-    .replace("<head>", f"<head>\n{TITLE_FIX_JS}\n{GTAG_SNIPPET}", 1)
+    .replace("<head>", f'<head>\n<meta name="viewport" content="width=device-width, initial-scale=1">\n{TITLE_FIX_JS}\n{GTAG_SNIPPET}', 1)
 )
 open("index.html", "w").write(html_out)
 print("wrote index.html")

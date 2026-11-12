@@ -103,6 +103,7 @@ PAGE = f'''<!doctype html>
 <head>
 {GTAG_SNIPPET}
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Paper Atlas &middot; Blog</title>
 <style>
 @font-face {{

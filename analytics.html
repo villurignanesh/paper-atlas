@@ -10,6 +10,7 @@
 </script>
 <meta charset="utf-8">
 <title>Paper Atlas · Analytics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 @font-face {
     font-family: "Valley Sans";
@@ -52,6 +53,16 @@ body {
 .pa-nav-link:hover { color: #e8e8f0; }
 .pa-nav-link.active { color: #0d0f14; background: #e8e8f0; }
 .pa-nav-link.active:hover { color: #0d0f14; }
+@media (max-width: 640px) {
+    #pa-nav {
+        top: 8px; left: 8px; right: 8px; width: auto; transform: none;
+        flex-direction: column; align-items: stretch; gap: 4px;
+        border-radius: 14px; padding: 7px 8px;
+    }
+    #pa-nav-brand { justify-content: center; font-size: 13px; }
+    #pa-nav-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; }
+    .pa-nav-link { text-align: center; padding: 7px 3px; font-size: 12px; }
+}
 
 h1 { font-weight: 700; font-size: 28px; margin: 0 0 4px; }
 .subtitle { opacity: 0.65; font-size: 14px; margin-bottom: 32px; }
@@ -90,6 +101,21 @@ h2 { font-weight: 600; font-size: 18px; margin: 0 0 4px; }
     font-size: 12px; pointer-events: none; z-index: 10;
 }
 .note { opacity: 0.5; font-size: 12px; margin-top: 8px; }
+.mobile-legend { display: none; }
+.mobile-chart-hint { display: none; }
+@media (max-width: 640px) {
+  body { padding: 92px 12px 48px; }
+  .panel { padding: 16px; margin-bottom: 16px; }
+  h1 { font-size: 25px; }
+  .panel .desktop-legend { display: none; }
+  .mobile-legend { display: grid; gap: 7px; margin: 16px 0; font-size: 12px; }
+  .mobile-legend span { display: flex; align-items: center; gap: 8px; }
+  .mobile-legend i { display: inline-block; width: 10px; height: 10px;
+                      border-radius: 3px; flex: none; }
+  .mobile-chart-hint { display: block; opacity: .65; font-size: 12px; }
+  .chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .chart-scroll .chart { width: 680px; max-width: none; }
+}
 </style>
 </head>
 <body>
@@ -115,8 +141,10 @@ h2 { font-weight: 600; font-size: 18px; margin: 0 0 4px; }
 <div class="panel">
   <h2>What the field pays attention to, over time</h2>
   <div class="panel-desc">Share of that year's corpus, by broad research area. Not raw counts (the corpus itself grew ~5x over this period): this shows which areas grew faster or slower than the field as a whole.</div>
-  <svg viewBox="0 0 200 240" class="chart" style="max-width:220px;float:right"><g class="legend-item" data-series="0"><rect x="0" y="20" width="12" height="12" rx="3" fill="#3b5f8a"/><text x="18" y="30" class="legend-label">Natural Language Processing &amp; LLMs</text></g><g class="legend-item" data-series="1"><rect x="0" y="42" width="12" height="12" rx="3" fill="#3c718a"/><text x="18" y="52" class="legend-label">Cross-Cutting &amp; Specialized Research</text></g><g class="legend-item" data-series="2"><rect x="0" y="64" width="12" height="12" rx="3" fill="#3d848a"/><text x="18" y="74" class="legend-label">Optimization &amp; Federated Learning</text></g><g class="legend-item" data-series="3"><rect x="0" y="86" width="12" height="12" rx="3" fill="#468891"/><text x="18" y="96" class="legend-label">Reinforcement Learning</text></g><g class="legend-item" data-series="4"><rect x="0" y="108" width="12" height="12" rx="3" fill="#597ba0"/><text x="18" y="118" class="legend-label">Generative Modeling and Inference</text></g><g class="legend-item" data-series="5"><rect x="0" y="130" width="12" height="12" rx="3" fill="#6b6eaf"/><text x="18" y="140" class="legend-label">Online Learning and Bandits</text></g><g class="legend-item" data-series="6"><rect x="0" y="152" width="12" height="12" rx="3" fill="#756bac"/><text x="18" y="162" class="legend-label">Multimodal Understanding &amp; Reasoning</text></g><g class="legend-item" data-series="7"><rect x="0" y="174" width="12" height="12" rx="3" fill="#8068a9"/><text x="18" y="184" class="legend-label">Graph Neural Networks &amp; Molecular AI</text></g><g class="legend-item" data-series="8"><rect x="0" y="196" width="12" height="12" rx="3" fill="#7665a2"/><text x="18" y="206" class="legend-label">3D Generation &amp; Reconstruction</text></g></svg>
-  
+  <svg viewBox="0 0 200 240" class="chart desktop-legend" style="max-width:220px;float:right"><g class="legend-item" data-series="0"><rect x="0" y="20" width="12" height="12" rx="3" fill="#3b5f8a"/><text x="18" y="30" class="legend-label">Natural Language Processing &amp; LLMs</text></g><g class="legend-item" data-series="1"><rect x="0" y="42" width="12" height="12" rx="3" fill="#3c718a"/><text x="18" y="52" class="legend-label">Cross-Cutting &amp; Specialized Research</text></g><g class="legend-item" data-series="2"><rect x="0" y="64" width="12" height="12" rx="3" fill="#3d848a"/><text x="18" y="74" class="legend-label">Optimization &amp; Federated Learning</text></g><g class="legend-item" data-series="3"><rect x="0" y="86" width="12" height="12" rx="3" fill="#468891"/><text x="18" y="96" class="legend-label">Reinforcement Learning</text></g><g class="legend-item" data-series="4"><rect x="0" y="108" width="12" height="12" rx="3" fill="#597ba0"/><text x="18" y="118" class="legend-label">Generative Modeling and Inference</text></g><g class="legend-item" data-series="5"><rect x="0" y="130" width="12" height="12" rx="3" fill="#6b6eaf"/><text x="18" y="140" class="legend-label">Online Learning and Bandits</text></g><g class="legend-item" data-series="6"><rect x="0" y="152" width="12" height="12" rx="3" fill="#756bac"/><text x="18" y="162" class="legend-label">Multimodal Understanding &amp; Reasoning</text></g><g class="legend-item" data-series="7"><rect x="0" y="174" width="12" height="12" rx="3" fill="#8068a9"/><text x="18" y="184" class="legend-label">Graph Neural Networks &amp; Molecular AI</text></g><g class="legend-item" data-series="8"><rect x="0" y="196" width="12" height="12" rx="3" fill="#7665a2"/><text x="18" y="206" class="legend-label">3D Generation &amp; Reconstruction</text></g></svg>
+  <div class="mobile-legend"><span><i style="background:#3b5f8a"></i>Natural Language Processing &amp; LLMs</span><span><i style="background:#3c718a"></i>Cross-Cutting &amp; Specialized Research</span><span><i style="background:#3d848a"></i>Optimization &amp; Federated Learning</span><span><i style="background:#468891"></i>Reinforcement Learning</span><span><i style="background:#597ba0"></i>Generative Modeling and Inference</span><span><i style="background:#6b6eaf"></i>Online Learning and Bandits</span><span><i style="background:#756bac"></i>Multimodal Understanding &amp; Reasoning</span><span><i style="background:#8068a9"></i>Graph Neural Networks &amp; Molecular AI</span><span><i style="background:#7665a2"></i>3D Generation &amp; Reconstruction</span></div>
+  <p class="mobile-chart-hint">Swipe sideways to explore the chart.</p>
+  <div class="chart-scroll" role="region" aria-label="Research area trends chart" tabindex="0">
 <svg viewBox="0 0 900 460" class="chart">
   <text x="45" y="424.0" text-anchor="end" class="axis-label">0%</text><line x1="55" y1="420.0" x2="880" y2="420.0" class="gridline"/><text x="45" y="344.0" text-anchor="end" class="axis-label">10%</text><line x1="55" y1="340.0" x2="880" y2="340.0" class="gridline"/><text x="45" y="264.0" text-anchor="end" class="axis-label">20%</text><line x1="55" y1="260.0" x2="880" y2="260.0" class="gridline"/><text x="45" y="184.1" text-anchor="end" class="axis-label">30%</text><line x1="55" y1="180.1" x2="880" y2="180.1" class="gridline"/><text x="45" y="104.1" text-anchor="end" class="axis-label">40%</text><line x1="55" y1="100.1" x2="880" y2="100.1" class="gridline"/><text x="45" y="24.1" text-anchor="end" class="axis-label">50%</text><line x1="55" y1="20.1" x2="880" y2="20.1" class="gridline"/>
   <line id="hover-guide" x1="0" y1="20" x2="0" y2="420" class="hover-guide"/>
@@ -124,13 +152,14 @@ h2 { font-weight: 600; font-size: 18px; margin: 0 0 4px; }
   <circle cx="55.0" cy="62.7" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2018" data-val="44.68" data-name="Natural Language Processing &amp; LLMs" data-x="55.0"/><circle cx="172.9" cy="58.3" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2019" data-val="45.23" data-name="Natural Language Processing &amp; LLMs" data-x="172.9"/><circle cx="290.7" cy="126.6" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2020" data-val="36.69" data-name="Natural Language Processing &amp; LLMs" data-x="290.7"/><circle cx="408.6" cy="111.4" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2021" data-val="38.59" data-name="Natural Language Processing &amp; LLMs" data-x="408.6"/><circle cx="526.4" cy="133.1" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2022" data-val="35.87" data-name="Natural Language Processing &amp; LLMs" data-x="526.4"/><circle cx="644.3" cy="153.3" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2023" data-val="33.35" data-name="Natural Language Processing &amp; LLMs" data-x="644.3"/><circle cx="762.1" cy="101.9" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2024" data-val="39.78" data-name="Natural Language Processing &amp; LLMs" data-x="762.1"/><circle cx="880.0" cy="49.6" r="3.8" fill="#3b5f8a" class="trend-pt" data-series="0" data-year="2025" data-val="46.31" data-name="Natural Language Processing &amp; LLMs" data-x="880.0"/><circle cx="55.0" cy="324.3" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2018" data-val="11.96" data-name="Cross-Cutting &amp; Specialized Research" data-x="55.0"/><circle cx="172.9" cy="321.3" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2019" data-val="12.34" data-name="Cross-Cutting &amp; Specialized Research" data-x="172.9"/><circle cx="290.7" cy="289.2" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2020" data-val="16.36" data-name="Cross-Cutting &amp; Specialized Research" data-x="290.7"/><circle cx="408.6" cy="290.8" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2021" data-val="16.16" data-name="Cross-Cutting &amp; Specialized Research" data-x="408.6"/><circle cx="526.4" cy="286.6" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2022" data-val="16.68" data-name="Cross-Cutting &amp; Specialized Research" data-x="526.4"/><circle cx="644.3" cy="283.9" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2023" data-val="17.02" data-name="Cross-Cutting &amp; Specialized Research" data-x="644.3"/><circle cx="762.1" cy="298.6" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2024" data-val="15.18" data-name="Cross-Cutting &amp; Specialized Research" data-x="762.1"/><circle cx="880.0" cy="316.8" r="3.8" fill="#3c718a" class="trend-pt" data-series="1" data-year="2025" data-val="12.91" data-name="Cross-Cutting &amp; Specialized Research" data-x="880.0"/><circle cx="55.0" cy="296.3" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2018" data-val="15.47" data-name="Optimization &amp; Federated Learning" data-x="55.0"/><circle cx="172.9" cy="307.1" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2019" data-val="14.12" data-name="Optimization &amp; Federated Learning" data-x="172.9"/><circle cx="290.7" cy="308.4" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2020" data-val="13.96" data-name="Optimization &amp; Federated Learning" data-x="290.7"/><circle cx="408.6" cy="316.8" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2021" data-val="12.91" data-name="Optimization &amp; Federated Learning" data-x="408.6"/><circle cx="526.4" cy="313.0" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2022" data-val="13.38" data-name="Optimization &amp; Federated Learning" data-x="526.4"/><circle cx="644.3" cy="323.2" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2023" data-val="12.1" data-name="Optimization &amp; Federated Learning" data-x="644.3"/><circle cx="762.1" cy="348.3" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2024" data-val="8.97" data-name="Optimization &amp; Federated Learning" data-x="762.1"/><circle cx="880.0" cy="368.7" r="3.8" fill="#3d848a" class="trend-pt" data-series="2" data-year="2025" data-val="6.41" data-name="Optimization &amp; Federated Learning" data-x="880.0"/><circle cx="55.0" cy="352.7" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2018" data-val="8.41" data-name="Reinforcement Learning" data-x="55.0"/><circle cx="172.9" cy="347.2" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2019" data-val="9.1" data-name="Reinforcement Learning" data-x="172.9"/><circle cx="290.7" cy="321.1" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2020" data-val="12.37" data-name="Reinforcement Learning" data-x="290.7"/><circle cx="408.6" cy="323.3" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2021" data-val="12.09" data-name="Reinforcement Learning" data-x="408.6"/><circle cx="526.4" cy="322.0" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2022" data-val="12.25" data-name="Reinforcement Learning" data-x="526.4"/><circle cx="644.3" cy="329.4" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2023" data-val="11.33" data-name="Reinforcement Learning" data-x="644.3"/><circle cx="762.1" cy="349.0" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2024" data-val="8.88" data-name="Reinforcement Learning" data-x="762.1"/><circle cx="880.0" cy="364.1" r="3.8" fill="#468891" class="trend-pt" data-series="3" data-year="2025" data-val="6.99" data-name="Reinforcement Learning" data-x="880.0"/><circle cx="55.0" cy="356.4" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2018" data-val="7.95" data-name="Generative Modeling and Inference" data-x="55.0"/><circle cx="172.9" cy="365.5" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2019" data-val="6.81" data-name="Generative Modeling and Inference" data-x="172.9"/><circle cx="290.7" cy="371.7" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2020" data-val="6.04" data-name="Generative Modeling and Inference" data-x="290.7"/><circle cx="408.6" cy="378.2" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2021" data-val="5.23" data-name="Generative Modeling and Inference" data-x="408.6"/><circle cx="526.4" cy="381.8" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2022" data-val="4.78" data-name="Generative Modeling and Inference" data-x="526.4"/><circle cx="644.3" cy="368.9" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2023" data-val="6.39" data-name="Generative Modeling and Inference" data-x="644.3"/><circle cx="762.1" cy="371.7" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2024" data-val="6.04" data-name="Generative Modeling and Inference" data-x="762.1"/><circle cx="880.0" cy="370.2" r="3.8" fill="#597ba0" class="trend-pt" data-series="4" data-year="2025" data-val="6.23" data-name="Generative Modeling and Inference" data-x="880.0"/><circle cx="55.0" cy="372.9" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2018" data-val="5.89" data-name="Online Learning and Bandits" data-x="55.0"/><circle cx="172.9" cy="371.3" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2019" data-val="6.09" data-name="Online Learning and Bandits" data-x="172.9"/><circle cx="290.7" cy="363.4" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2020" data-val="7.08" data-name="Online Learning and Bandits" data-x="290.7"/><circle cx="408.6" cy="368.0" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2021" data-val="6.5" data-name="Online Learning and Bandits" data-x="408.6"/><circle cx="526.4" cy="366.3" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2022" data-val="6.71" data-name="Online Learning and Bandits" data-x="526.4"/><circle cx="644.3" cy="366.3" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2023" data-val="6.71" data-name="Online Learning and Bandits" data-x="644.3"/><circle cx="762.1" cy="379.1" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2024" data-val="5.11" data-name="Online Learning and Bandits" data-x="762.1"/><circle cx="880.0" cy="386.1" r="3.8" fill="#6b6eaf" class="trend-pt" data-series="5" data-year="2025" data-val="4.24" data-name="Online Learning and Bandits" data-x="880.0"/><circle cx="55.0" cy="398.7" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2018" data-val="2.66" data-name="Multimodal Understanding &amp; Reasoning" data-x="55.0"/><circle cx="172.9" cy="401.9" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2019" data-val="2.26" data-name="Multimodal Understanding &amp; Reasoning" data-x="172.9"/><circle cx="290.7" cy="403.8" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2020" data-val="2.03" data-name="Multimodal Understanding &amp; Reasoning" data-x="290.7"/><circle cx="408.6" cy="394.9" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2021" data-val="3.14" data-name="Multimodal Understanding &amp; Reasoning" data-x="408.6"/><circle cx="526.4" cy="392.4" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2022" data-val="3.45" data-name="Multimodal Understanding &amp; Reasoning" data-x="526.4"/><circle cx="644.3" cy="386.3" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2023" data-val="4.21" data-name="Multimodal Understanding &amp; Reasoning" data-x="644.3"/><circle cx="762.1" cy="372.3" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2024" data-val="5.96" data-name="Multimodal Understanding &amp; Reasoning" data-x="762.1"/><circle cx="880.0" cy="363.1" r="3.8" fill="#756bac" class="trend-pt" data-series="6" data-year="2025" data-val="7.12" data-name="Multimodal Understanding &amp; Reasoning" data-x="880.0"/><circle cx="55.0" cy="405.5" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2018" data-val="1.81" data-name="Graph Neural Networks &amp; Molecular AI" data-x="55.0"/><circle cx="172.9" cy="399.2" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2019" data-val="2.6" data-name="Graph Neural Networks &amp; Molecular AI" data-x="172.9"/><circle cx="290.7" cy="393.7" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2020" data-val="3.29" data-name="Graph Neural Networks &amp; Molecular AI" data-x="290.7"/><circle cx="408.6" cy="392.4" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2021" data-val="3.45" data-name="Graph Neural Networks &amp; Molecular AI" data-x="408.6"/><circle cx="526.4" cy="387.4" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2022" data-val="4.08" data-name="Graph Neural Networks &amp; Molecular AI" data-x="526.4"/><circle cx="644.3" cy="377.6" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2023" data-val="5.3" data-name="Graph Neural Networks &amp; Molecular AI" data-x="644.3"/><circle cx="762.1" cy="380.2" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2024" data-val="4.98" data-name="Graph Neural Networks &amp; Molecular AI" data-x="762.1"/><circle cx="880.0" cy="382.2" r="3.8" fill="#8068a9" class="trend-pt" data-series="7" data-year="2025" data-val="4.73" data-name="Graph Neural Networks &amp; Molecular AI" data-x="880.0"/><circle cx="55.0" cy="410.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2018" data-val="1.17" data-name="3D Generation &amp; Reconstruction" data-x="55.0"/><circle cx="172.9" cy="408.5" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2019" data-val="1.44" data-name="3D Generation &amp; Reconstruction" data-x="172.9"/><circle cx="290.7" cy="402.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2020" data-val="2.18" data-name="3D Generation &amp; Reconstruction" data-x="290.7"/><circle cx="408.6" cy="404.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2021" data-val="1.93" data-name="3D Generation &amp; Reconstruction" data-x="408.6"/><circle cx="526.4" cy="397.6" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2022" data-val="2.8" data-name="3D Generation &amp; Reconstruction" data-x="526.4"/><circle cx="644.3" cy="391.3" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2023" data-val="3.59" data-name="3D Generation &amp; Reconstruction" data-x="644.3"/><circle cx="762.1" cy="379.2" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2024" data-val="5.1" data-name="3D Generation &amp; Reconstruction" data-x="762.1"/><circle cx="880.0" cy="379.5" r="3.8" fill="#7665a2" class="trend-pt" data-series="8" data-year="2025" data-val="5.07" data-name="3D Generation &amp; Reconstruction" data-x="880.0"/>
   <text x="55.0" y="440" text-anchor="middle" class="axis-label">2018</text><text x="172.9" y="440" text-anchor="middle" class="axis-label">2019</text><text x="290.7" y="440" text-anchor="middle" class="axis-label">2020</text><text x="408.6" y="440" text-anchor="middle" class="axis-label">2021</text><text x="526.4" y="440" text-anchor="middle" class="axis-label">2022</text><text x="644.3" y="440" text-anchor="middle" class="axis-label">2023</text><text x="762.1" y="440" text-anchor="middle" class="axis-label">2024</text><text x="880.0" y="440" text-anchor="middle" class="axis-label">2025</text>
 </svg>
-
+</div>
 </div>
 
 <div class="panel">
   <h2>Share of accepted papers by venue, by year</h2>
   <div class="panel-desc">Each venue's share of that year's total accepted papers, not raw counts (the corpus grew ~5x over this period, so raw counts alone would mostly just show that growth rather than how the venue mix shifted). From the ingestion manifest (48 venue-years).</div>
-  
+  <p class="mobile-chart-hint">Swipe sideways to explore the chart.</p>
+  <div class="chart-scroll" role="region" aria-label="Venue share chart" tabindex="0">
 <svg viewBox="0 0 900 410" class="chart">
   <g transform="translate(50,0)"><g class="legend-item2"><rect x="0" y="0" width="12" height="12" rx="3" fill="#3b5f8a"/><text x="18" y="10" class="legend-label">ACL</text></g><g class="legend-item2"><rect x="110" y="0" width="12" height="12" rx="3" fill="#3c718a"/><text x="128" y="10" class="legend-label">EMNLP</text></g><g class="legend-item2"><rect x="220" y="0" width="12" height="12" rx="3" fill="#3d848a"/><text x="238" y="10" class="legend-label">ICLR</text></g><g class="legend-item2"><rect x="330" y="0" width="12" height="12" rx="3" fill="#468891"/><text x="348" y="10" class="legend-label">ICML</text></g><g class="legend-item2"><rect x="440" y="0" width="12" height="12" rx="3" fill="#597ba0"/><text x="458" y="10" class="legend-label">NAACL</text></g><g class="legend-item2"><rect x="550" y="0" width="12" height="12" rx="3" fill="#6b6eaf"/><text x="568" y="10" class="legend-label">NEURIPS</text></g></g>
   <g transform="translate(0,30)">
@@ -140,7 +169,7 @@ h2 { font-weight: 600; font-size: 18px; margin: 0 0 4px; }
   </g>
 </svg>
 <p class="note">Faded bars = incomplete venue-year (conference not yet concluded or proceedings not yet published).</p>
-
+</div>
 </div>
 
 <!-- Deliberately a direct child of <body>, not nested inside either .panel: .panel has
@@ -181,16 +210,19 @@ function positionTooltip(e) {
 }
 
 document.querySelectorAll('.trend-pt').forEach(pt => {
-  pt.addEventListener('mouseenter', e => {
+  const show = e => {
     tooltip.style.display = 'block';
     tooltip.innerHTML = `<b>${pt.dataset.name}</b><br>${pt.dataset.year}: ${pt.dataset.val}%`;
     hoverGuide.setAttribute('x1', pt.dataset.x);
     hoverGuide.setAttribute('x2', pt.dataset.x);
     hoverGuide.classList.add('visible');
     positionTooltip(e);
-  });
+  };
+  pt.addEventListener('mouseenter', show);
+  pt.addEventListener('click', show);
   pt.addEventListener('mousemove', positionTooltip);
   pt.addEventListener('mouseleave', () => {
+    if (matchMedia('(hover: none)').matches) return;
     tooltip.style.display = 'none';
     hoverGuide.classList.remove('visible');
   });
@@ -207,7 +239,7 @@ document.querySelectorAll('.legend-item').forEach(item => {
   });
 });
 document.querySelectorAll('.bar').forEach(bar => {
-  bar.addEventListener('mouseenter', e => {
+  const show = e => {
     tooltip.style.display = 'block';
     // Paper count dropped from here deliberately: the bar's own height against the
     // y-axis already shows that number directly, so repeating it in the tooltip was
@@ -217,9 +249,19 @@ document.querySelectorAll('.bar').forEach(bar => {
       ? '' : ' <span style="opacity:0.6">(partial)</span>';
     tooltip.innerHTML = `<b>${bar.dataset.venue.toUpperCase()} ${bar.dataset.year}</b><br>${bar.dataset.share}% of that year's total${complete}`;
     positionTooltip(e);
-  });
+  };
+  bar.addEventListener('mouseenter', show);
+  bar.addEventListener('click', show);
   bar.addEventListener('mousemove', positionTooltip);
-  bar.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+  bar.addEventListener('mouseleave', () => {
+    if (!matchMedia('(hover: none)').matches) tooltip.style.display = 'none';
+  });
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.trend-pt, .bar')) {
+    tooltip.style.display = 'none';
+    hoverGuide.classList.remove('visible');
+  }
 });
 </script>
 </body>

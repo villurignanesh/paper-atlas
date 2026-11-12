@@ -9,6 +9,7 @@
   gtag('config', 'G-YKFFPVN4WL');
 </script>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Paper Atlas &middot; Blog</title>
 <style>
 @font-face {
@@ -52,6 +53,16 @@ body {
 .pa-nav-link:hover { color: #e8e8f0; }
 .pa-nav-link.active { color: #0d0f14; background: #e8e8f0; }
 .pa-nav-link.active:hover { color: #0d0f14; }
+@media (max-width: 640px) {
+    #pa-nav {
+        top: 8px; left: 8px; right: 8px; width: auto; transform: none;
+        flex-direction: column; align-items: stretch; gap: 4px;
+        border-radius: 14px; padding: 7px 8px;
+    }
+    #pa-nav-brand { justify-content: center; font-size: 13px; }
+    #pa-nav-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; }
+    .pa-nav-link { text-align: center; padding: 7px 3px; font-size: 12px; }
+}
 
 .post {
     background: var(--panel); backdrop-filter: blur(8px);
