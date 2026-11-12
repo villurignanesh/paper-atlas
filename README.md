@@ -29,8 +29,20 @@ authors, keywords, and abstracts. Every result includes a source URL and states
 that its evidence is metadata/abstract only; related papers share a leaf cluster
 but are not ranked by similarity or asserted to cite or support one another.
 
-The server needs the processed local `data/` directory described below. After
-`uv sync`, configure an MCP client with absolute paths (replace the example root):
+The server needs a versioned local corpus. After `uv sync`, download and verify
+the [v1 corpus release](https://github.com/villurignanesh/paper-atlas/releases/tag/corpus-v1)
+from the repository root:
+
+```bash
+mkdir -p data
+curl -fL -o paper-atlas-corpus-v1.tar.gz https://github.com/villurignanesh/paper-atlas/releases/download/corpus-v1/paper-atlas-corpus-v1.tar.gz
+curl -fL -o paper-atlas-corpus-v1.tar.gz.sha256 https://github.com/villurignanesh/paper-atlas/releases/download/corpus-v1/paper-atlas-corpus-v1.tar.gz.sha256
+shasum -a 256 -c paper-atlas-corpus-v1.tar.gz.sha256
+tar -xzf paper-atlas-corpus-v1.tar.gz -C data
+```
+
+You can remove the two downloaded archive files after extraction. Configure an
+MCP client with absolute paths (replace the example root):
 
 ```json
 {
@@ -39,7 +51,7 @@ The server needs the processed local `data/` directory described below. After
       "command": "/absolute/path/to/paper-atlas/.venv/bin/python",
       "args": ["/absolute/path/to/paper-atlas/mcp_server.py"],
       "env": {
-        "PAPER_ATLAS_DATA_DIR": "/absolute/path/to/paper-atlas/data"
+        "PAPER_ATLAS_DATA_DIR": "/absolute/path/to/paper-atlas/data/paper-atlas-corpus-v1"
       }
     }
   }
@@ -48,7 +60,9 @@ The server needs the processed local `data/` directory described below. After
 
 The JSON wrapper/key can vary by client; the command, arguments, and environment
 variable are the connection contract. The server reads its corpus on the first
-tool call. There is no hosted MCP endpoint or downloadable corpus snapshot yet.
+tool call. The release contains 48 normalized Parquet files, leaf-cluster assignments,
+cluster labels, and a manifest with each file's SHA-256 hash. It does not include
+PDF text or a hosted MCP endpoint.
 
 ## How it's built
 
@@ -82,8 +96,9 @@ considered, what was picked, why, and what would change it.
 uv sync
 ```
 
-Data (`data/`) is gitignored and not checked in. You'll need to run the
-ingestion adapters yourself to build a local corpus; see
+Data (`data/`) is gitignored and not checked in. The release above is sufficient
+for the MCP server. To rebuild the map or produce a new corpus, run the
+ingestion adapters and later pipeline stages; see
 [`docs/REPRODUCE.md`](docs/REPRODUCE.md) for the full pipeline, and
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the remote-GPU push/run/pull pattern
 the embedding and clustering steps use.

@@ -1,7 +1,7 @@
 # 017: Shared query core for MCP access (issue #3)
 
 Date: 2026-11-11
-Status: decided (serving architecture, first tool set, local SDK); distribution open
+Status: decided (serving architecture, first tool set, local SDK); distribution in 018
 
 ## Context
 
@@ -51,7 +51,6 @@ results, and recoverable tool errors; query behavior remains in the shared core.
 ## Still to decide
 
 - Exact result schema, ranking, and query limits after measuring the first core.
-- How a user obtains and refreshes the local corpus snapshot.
 - Eventual hosted transport/deployment details.
 
 ## What would make us revisit
