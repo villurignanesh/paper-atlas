@@ -24,8 +24,10 @@ max_y = max(max(v) for v in series.values())
 y_of = lambda v: PAD_T + plot_h * (1 - v / (max_y * 1.08))
 
 lines_svg, points_svg, legend_svg = [], [], []
+mobile_legend = []
 for i, (raw_name, color) in enumerate(zip(sorted(series, key=lambda k: -sum(series[k])), COLORS)):
     name = html.escape(raw_name)
+    mobile_legend.append(f'<span><i style="background:{color}"></i>{name}</span>')
     vals = series[raw_name]
     pts = " ".join(f"{x_of(j):.1f},{y_of(v):.1f}" for j, v in enumerate(vals))
     lines_svg.append(
@@ -179,10 +181,16 @@ def venue_view(ven):
         notes.insert(0, f'<p class="warn">Most points for {ven.upper()} are hidden or grey. '
                         f'{ven_n[big] / sum(ven_n.values()):.0%} of its papers fall in one broad area '
                         f'({html.escape(big)}), so this mega-category level cannot resolve trends here.</p>')
+    mobile_venue_legend = "".join(
+        f'<span><i style="background:{VSERIES_COLOR[c]}"></i>{html.escape(c)}</span>'
+        for c in vseries)
     return (f'<div class="view" id="view-{ven}" hidden>{"".join(notes)}'
-            f'<svg viewBox="0 0 200 240" class="chart" style="max-width:220px;float:right">{"".join(legend)}</svg>'
+            f'<svg viewBox="0 0 200 240" class="chart desktop-legend" style="max-width:220px;float:right">{"".join(legend)}</svg>'
+            f'<div class="mobile-legend">{mobile_venue_legend}</div>'
+            f'<p class="mobile-chart-hint">Swipe sideways to explore the chart.</p>'
+            f'<div class="chart-scroll" role="region" aria-label="{ven.upper()} research area trends chart" tabindex="0">'
             f'<svg viewBox="0 0 {W} {H+16}" class="chart"><line class="vguide" x1="0" y1="{PAD_T}" '
-            f'x2="0" y2="{H-PAD_B}"/>{yt}{line_svg}{"".join(pts)}{xt}</svg></div>')
+            f'x2="0" y2="{H-PAD_B}"/>{yt}{line_svg}{"".join(pts)}{xt}</svg></div></div>')
 
 
 venue_names = sorted({r["venue"] for r in vy["rows"]})
@@ -263,7 +271,7 @@ chart2 = f'''
 <p class="note">Faded bars = incomplete venue-year (conference not yet concluded or proceedings not yet published).</p>
 '''
 
-VENUE_JS = '\nconst venueSelect = document.getElementById(\'venue-select\');\nvenueSelect.addEventListener(\'change\', () => {\n  document.querySelectorAll(\'#views .view\').forEach(v => { v.hidden = v.id !== \'view-\' + venueSelect.value; });\n  tooltip.style.display = \'none\';\n});\ndocument.querySelectorAll(\'.vpt\').forEach(pt => {\n  const guide = pt.closest(\'svg\').querySelector(\'.vguide\');\n  const show = e => {\n    tooltip.style.display = \'block\';\n    const low = pt.dataset.grey === \'1\'\n      ? \'<br><span style="opacity:0.6">few papers: read with caution</span>\' : \'\';\n    tooltip.innerHTML = `<b>${pt.dataset.name}</b><br>${pt.dataset.year}: ${pt.dataset.val}% `\n      + `(${pt.dataset.k} of ${pt.dataset.n} labelled papers)${low}`;\n    guide.setAttribute(\'x1\', pt.dataset.x); guide.setAttribute(\'x2\', pt.dataset.x);\n    guide.classList.add(\'visible\');\n    positionTooltip(e);\n  };\n  const hide = () => { tooltip.style.display = \'none\'; guide.classList.remove(\'visible\'); };\n  pt.addEventListener(\'mouseenter\', show);\n  pt.addEventListener(\'mousemove\', positionTooltip);\n  pt.addEventListener(\'mouseleave\', hide);\n  pt.addEventListener(\'click\', show);  // touch screens have no hover\n});\n// Tap anywhere that is not a venue point to dismiss the tooltip a tap opened.\ndocument.addEventListener(\'click\', e => {\n  if (!e.target.closest(\'.vpt\')) {\n    tooltip.style.display = \'none\';\n    document.querySelectorAll(\'.vguide\').forEach(g => g.classList.remove(\'visible\'));\n  }\n});\n'
+VENUE_JS = '\nconst venueSelect = document.getElementById(\'venue-select\');\nvenueSelect.addEventListener(\'change\', () => {\n  document.querySelectorAll(\'#views .view\').forEach(v => { v.hidden = v.id !== \'view-\' + venueSelect.value; });\n  tooltip.style.display = \'none\';\n});\ndocument.querySelectorAll(\'.vpt\').forEach(pt => {\n  const guide = pt.closest(\'svg\').querySelector(\'.vguide\');\n  const show = e => {\n    tooltip.style.display = \'block\';\n    const low = pt.dataset.grey === \'1\'\n      ? \'<br><span style="opacity:0.6">few papers: read with caution</span>\' : \'\';\n    tooltip.innerHTML = `<b>${pt.dataset.name}</b><br>${pt.dataset.year}: ${pt.dataset.val}% `\n      + `(${pt.dataset.k} of ${pt.dataset.n} labelled papers)${low}`;\n    guide.setAttribute(\'x1\', pt.dataset.x); guide.setAttribute(\'x2\', pt.dataset.x);\n    guide.classList.add(\'visible\');\n    positionTooltip(e);\n  };\n  const hide = () => { if (matchMedia(\'(hover: none)\').matches) return; tooltip.style.display = \'none\'; guide.classList.remove(\'visible\'); };\n  pt.addEventListener(\'mouseenter\', show);\n  pt.addEventListener(\'mousemove\', positionTooltip);\n  pt.addEventListener(\'mouseleave\', hide);\n  pt.addEventListener(\'click\', show);  // touch screens have no hover\n});\n// Tap anywhere that is not a venue point to dismiss the tooltip a tap opened.\ndocument.addEventListener(\'click\', e => {\n  if (!e.target.closest(\'.vpt, .trend-pt, .bar\')) {\n    tooltip.style.display = \'none\';\n    document.querySelectorAll(\'.vguide\').forEach(g => g.classList.remove(\'visible\'));\n  }\n});\n'
 
 PAGE = f'''<!doctype html>
 <html>
@@ -271,6 +279,7 @@ PAGE = f'''<!doctype html>
 {GTAG_SNIPPET}
 <meta charset="utf-8">
 <title>Paper Atlas · Analytics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 @font-face {{
     font-family: "Valley Sans";
@@ -339,6 +348,21 @@ h2 {{ font-weight: 600; font-size: 18px; margin: 0 0 4px; }}
     opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
 }}
 .vguide.visible {{ opacity: 1; }}
+.mobile-legend {{ display: none; }}
+.mobile-chart-hint {{ display: none; }}
+@media (max-width: 640px) {{
+  body {{ padding: 92px 12px 48px; }}
+  .panel {{ padding: 16px; margin-bottom: 16px; }}
+  h1 {{ font-size: 25px; }}
+  .panel .desktop-legend {{ display: none; }}
+  .mobile-legend {{ display: grid; gap: 7px; margin: 16px 0; font-size: 12px; }}
+  .mobile-legend span {{ display: flex; align-items: center; gap: 8px; }}
+  .mobile-legend i {{ display: inline-block; width: 10px; height: 10px;
+                      border-radius: 3px; flex: none; }}
+  .mobile-chart-hint {{ display: block; opacity: .65; font-size: 12px; }}
+  .chart-scroll {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
+  .chart-scroll .chart {{ width: 680px; max-width: none; }}
+}}
 </style>
 </head>
 <body>
@@ -353,8 +377,10 @@ h2 {{ font-weight: 600; font-size: 18px; margin: 0 0 4px; }}
     <select id="venue-select" aria-controls="views">{venue_options}</select></div>
   <div id="views">
   <div class="view" id="view-all">
-  <svg viewBox="0 0 200 240" class="chart" style="max-width:220px;float:right">{"".join(legend_svg)}</svg>
-  {chart1}
+  <svg viewBox="0 0 200 240" class="chart desktop-legend" style="max-width:220px;float:right">{"".join(legend_svg)}</svg>
+  <div class="mobile-legend">{"".join(mobile_legend)}</div>
+  <p class="mobile-chart-hint">Swipe sideways to explore the chart.</p>
+  <div class="chart-scroll" role="region" aria-label="All venues research area trends chart" tabindex="0">{chart1}</div>
   </div>
   {venue_views}
   </div>
@@ -363,7 +389,8 @@ h2 {{ font-weight: 600; font-size: 18px; margin: 0 0 4px; }}
 <div class="panel">
   <h2>Share of accepted papers by venue, by year</h2>
   <div class="panel-desc">Each venue's share of that year's total accepted papers, not raw counts (the corpus grew ~5x over this period, so raw counts alone would mostly just show that growth rather than how the venue mix shifted). From the ingestion manifest ({len(manifest)} venue-years).</div>
-  {chart2}
+  <p class="mobile-chart-hint">Swipe sideways to explore the chart.</p>
+  <div class="chart-scroll" role="region" aria-label="Venue share chart" tabindex="0">{chart2}</div>
 </div>
 
 <!-- Deliberately a direct child of <body>, not nested inside either .panel: .panel has
@@ -404,16 +431,19 @@ function positionTooltip(e) {{
 }}
 
 document.querySelectorAll('.trend-pt').forEach(pt => {{
-  pt.addEventListener('mouseenter', e => {{
+  const show = e => {{
     tooltip.style.display = 'block';
     tooltip.innerHTML = `<b>${{pt.dataset.name}}</b><br>${{pt.dataset.year}}: ${{pt.dataset.val}}%`;
     hoverGuide.setAttribute('x1', pt.dataset.x);
     hoverGuide.setAttribute('x2', pt.dataset.x);
     hoverGuide.classList.add('visible');
     positionTooltip(e);
-  }});
+  }};
+  pt.addEventListener('mouseenter', show);
+  pt.addEventListener('click', show);
   pt.addEventListener('mousemove', positionTooltip);
   pt.addEventListener('mouseleave', () => {{
+    if (matchMedia('(hover: none)').matches) return;
     tooltip.style.display = 'none';
     hoverGuide.classList.remove('visible');
   }});
@@ -430,7 +460,7 @@ document.querySelectorAll('.legend-item').forEach(item => {{
   }});
 }});
 document.querySelectorAll('.bar').forEach(bar => {{
-  bar.addEventListener('mouseenter', e => {{
+  const show = e => {{
     tooltip.style.display = 'block';
     // Paper count dropped from here deliberately: the bar's own height against the
     // y-axis already shows that number directly, so repeating it in the tooltip was
@@ -440,9 +470,19 @@ document.querySelectorAll('.bar').forEach(bar => {{
       ? '' : ' <span style="opacity:0.6">(partial)</span>';
     tooltip.innerHTML = `<b>${{bar.dataset.venue.toUpperCase()}} ${{bar.dataset.year}}</b><br>${{bar.dataset.share}}% of that year's total${{complete}}`;
     positionTooltip(e);
-  }});
+  }};
+  bar.addEventListener('mouseenter', show);
+  bar.addEventListener('click', show);
   bar.addEventListener('mousemove', positionTooltip);
-  bar.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+  bar.addEventListener('mouseleave', () => {{
+    if (!matchMedia('(hover: none)').matches) tooltip.style.display = 'none';
+  }});
+}});
+document.addEventListener('click', e => {{
+  if (!e.target.closest('.trend-pt, .bar, .vpt')) {{
+    tooltip.style.display = 'none';
+    hoverGuide.classList.remove('visible');
+  }}
 }});
 {VENUE_JS}</script>
 </body>

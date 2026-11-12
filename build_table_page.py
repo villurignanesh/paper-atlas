@@ -23,6 +23,7 @@ PAGE = f'''<!doctype html>
 <head>
 {GTAG_SNIPPET}
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Paper Atlas · Browse</title>
 <style>
 @font-face {{
@@ -114,6 +115,28 @@ td.title a:hover {{ color: var(--accent); text-decoration: underline; }}
 }}
 .pagination button:disabled {{ opacity: 0.4; cursor: default; }}
 .pagination button:not(:disabled):hover {{ background: var(--accent-bg); }}
+#mobileSort {{ display: none; }}
+@media (max-width: 640px) {{
+  body {{ padding: 92px 12px 48px; }}
+  .controls {{ padding: 10px; gap: 8px; }}
+  .search-wrap {{ flex-basis: 100%; }}
+  .controls input[type=search], .controls select {{ min-height: 44px; font-size: 16px; }}
+  .controls select {{ flex: 1 1 calc(50% - 8px); min-width: 0; }}
+  #mobileSort {{ display: block; }}
+  table, tbody {{ display: block; width: 100%; }}
+  table {{ background: none; border: 0; box-shadow: none; }}
+  thead {{ display: none; }}
+  tbody tr {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px;
+              margin-bottom: 10px; padding: 14px; background: var(--panel);
+              border: 1px solid var(--border); border-radius: 10px; }}
+  tbody td {{ display: block; padding: 0; border: 0; min-width: 0; }}
+  tbody td.title, tbody td:last-child {{ grid-column: 1 / -1; }}
+  tbody td.title {{ font-size: 15px; font-weight: 600; }}
+  tbody td:nth-child(3) {{ text-align: right; }}
+  tbody td:last-child .tag {{ white-space: normal; }}
+  .pagination {{ flex-wrap: wrap; }}
+  .pagination button {{ min-height: 44px; }}
+}}
 </style>
 </head>
 <body>
@@ -133,6 +156,10 @@ td.title a:hover {{ color: var(--accent); text-decoration: underline; }}
   <select id="venueFilter"><option value="">All venues</option></select>
   <select id="yearFilter"><option value="">All years</option></select>
   <select id="megaFilter"><option value="">All categories</option></select>
+  <select id="mobileSort" aria-label="Sort papers"><option value="">Original order</option>
+    <option value="t:asc">Title A–Z</option><option value="t:desc">Title Z–A</option>
+    <option value="y:desc">Newest first</option><option value="y:asc">Oldest first</option>
+    <option value="v:asc">Venue</option><option value="mega:asc">Category</option></select>
 </div>
 <div class="result-count" id="count"></div>
 
@@ -211,6 +238,10 @@ qClear.addEventListener('click', () => {{ qInput.value = ''; applyFilters(); ref
 venueSel.addEventListener('change', applyFilters);
 yearSel.addEventListener('change', applyFilters);
 megaSel.addEventListener('change', applyFilters);
+document.getElementById('mobileSort').addEventListener('change', e => {{
+  [sortKey, sortAsc] = e.target.value ? [e.target.value.split(':')[0], e.target.value.endsWith(':asc')] : [null, true];
+  applyFilters();
+}});
 document.querySelectorAll('th[data-key]').forEach(th => {{
   th.addEventListener('click', () => {{
     const key = th.dataset.key;
