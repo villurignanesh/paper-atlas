@@ -14,6 +14,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from paper_atlas.query_core import PaperCorpus
+from paper_atlas.corpus_release import build, verify
 
 
 class QueryCoreTest(unittest.TestCase):
@@ -101,6 +102,19 @@ class QueryCoreTest(unittest.TestCase):
                 self.assertTrue(invalid.is_error)
 
         asyncio.run(exercise())
+
+    def test_release_archive_is_deterministic_and_verified(self):
+        output_dir = self.root / "release"
+        archive = build(self.root, output_dir, "v1")
+        first_hash = (output_dir / f"{archive.name}.sha256").read_text()
+        manifest = verify(archive)
+        self.assertEqual(manifest["paper_count"], len(self.ids))
+        self.assertEqual(len(manifest["files"]), 3)
+        build(self.root, output_dir, "v1")
+        self.assertEqual((output_dir / f"{archive.name}.sha256").read_text(), first_hash)
+        (output_dir / f"{archive.name}.sha256").write_text("0" * 64 + f"  {archive.name}\n")
+        with self.assertRaisesRegex(ValueError, "archive SHA-256 mismatch"):
+            verify(archive)
 
 
 if __name__ == "__main__":
