@@ -1,7 +1,7 @@
 # 014: Venue dropdown on the mega-category trend chart (issue #4, Stage 2)
 
 Date: 2026-10-29
-Status: decided (presentation); thresholds unchanged from 013 (still PROVISIONAL)
+Status: decided (presentation and reliability thresholds)
 
 ## Context
 
@@ -41,19 +41,19 @@ Analytics page. The task fixed the control (a dropdown: "All" plus each venue), 
 
 ## Thresholds
 
-No change. 013's proposed values are used as-is: hide when the 95% Wilson half-width exceeds
-100% of the point's own share (a zero count is always hidden), grey above 50%. They remain
-provisional pending the maintainer. They are named constants in one place.
+The maintainer adopted 013's proposed rules on 2026-11-11: hide when the 95% Wilson
+half-width exceeds 100% of the point's own share (a zero count is always hidden), grey
+above 50%. They are named constants in one place.
 
 One NEW number was needed, not in 013: the note "this level cannot resolve trends here" shows
 when more than **half** of a venue's points are hidden or grey (`NOTE_FRACTION = 0.5`). It is
-a judgment call. "Hidden" alone would not trigger it for any venue (30.4 / 28.6 / 47.6% for ACL
-/ EMNLP / NAACL), so the count is hidden **plus** grey (62.5 / 60.7 / 71.4%). ICLR is 7.1%, ICML and
-NeurIPS 0%.
+a judgment call, adopted with the thresholds. "Hidden" alone would not trigger it for any
+venue (30.4 / 28.6 / 47.6% for ACL / EMNLP / NAACL), so the count is hidden **plus** grey
+(62.5 / 60.7 / 71.4%). ICLR is 7.1%, ICML and NeurIPS 0%.
 
 ## What would make us revisit
 
-- The maintainer changes the 013 thresholds (edit the constants, rebuild).
+- Reader feedback suggests changing the 013 thresholds (edit the constants, rebuild).
 - Page weight matters more than the pre-render simplicity (move to JS rendering).
 - A finer category level for the NLP venues (013 follow-up), which would change which points
   are hidden.

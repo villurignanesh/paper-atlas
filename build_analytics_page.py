@@ -66,8 +66,8 @@ chart1 = f'''
 '''
 
 # Venue view (issue #4, Stage 2): the same chart for one venue, drawn from venue_year_mega.
-# Every rule value below is from docs/decisions/013-per-venue-trends.md, where they are
-# PROVISIONAL (proposed, not adopted by the maintainer). They live here and nowhere else.
+# The reliability thresholds below were adopted by the maintainer on 2026-11-11;
+# see docs/decisions/013-per-venue-trends.md. They live here and nowhere else.
 Z95 = 1.959964             # 95% Wilson interval
 HIDE_REL_WIDTH = 1.0       # hide a point when its Wilson half-width exceeds 100% of its share
 GREY_REL_WIDTH = 0.5       # draw it grey when the half-width exceeds 50% of its share

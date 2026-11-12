@@ -1,7 +1,7 @@
 # 013: Per-venue category trends (analytics.json, issue #4)
 
 Date: 2026-10-29
-Status: decided (denominator, category set, windows); thresholds PROPOSED, not adopted
+Status: decided (denominator, category set, windows, reliability thresholds)
 
 ## Context
 
@@ -64,14 +64,14 @@ are close to flat by construction. This is a property of the category scheme, no
 sample size, which is why binning does not fix it. The mega level has no decision log of
 its own (011 records two levels); this log does not supply one.
 
-## Thresholds: PROPOSED, provisional, open for the maintainer
+## Reliability thresholds (adopted 2026-11-11)
 
 Rules first suggested were inert on this data: "hide if labelled denominator < 30/50/100"
 hides 0% of cells (the smallest venue-year has 284 labelled papers) and "grey if Wilson
 95% half-width > 10 points" also hides 0% (widest interval is 5.3 points). Wilson in
 points flatters tiny shares: 3 papers of 335 has a half-width of only 1.15 points.
 
-Proposed instead, on the relative scale (half-width as a fraction of the cell's own
+Adopted instead, on the relative scale (half-width as a fraction of the cell's own
 share; a zero cell is always hidden):
 
 | Tier | Rule | Roughly | ACL / EMNLP / NAACL, unbinned | ICLR / ICML / NeurIPS, unbinned |
@@ -80,13 +80,13 @@ share; a zero cell is always hidden):
 | Grey | half-width > 50% of share | fewer than ~17 papers | 62.5 / 60.7 / 71.4% | 7.1 / 0 / 0% |
 
 The paper-count equivalents are the smallest counts that survive in this data, not exact
-conversions. No cutoff has been validated against how readers use the chart. These are
-PROPOSED values; whether to adopt them, and whether the page hides or greys, is left to
-the maintainer and to Stage 2 (the UI).
+conversions. The maintainer chose these hide and grey rules for the Stage 2 chart. No
+cutoff has been validated against how readers use the chart, so the thresholds should
+be revisited if reader feedback or a finer category scheme calls for it.
 
 ## What would make us revisit
 
 - A finer category level (mid-level, 44 clusters) for the NLP venues.
 - Grouping venues into NLP/ML families (see 012).
 - Re-clustering: 011 reports seed ARI 0.57, so per-venue shares inherit that instability.
-- A chosen threshold, once agreed.
+- Reader feedback showing these thresholds hide useful trends or overstate weak ones.
