@@ -6,6 +6,7 @@ dark glass panels.
 """
 import html
 import json
+import math
 from nav import NAV_CSS, nav_html, GTAG_SNIPPET
 
 data = json.load(open("data/analytics.json"))
@@ -64,8 +65,133 @@ chart1 = f'''
 </svg>
 '''
 
+# Venue view (issue #4, Stage 2): the same chart for one venue, drawn from venue_year_mega.
+# The reliability thresholds below were adopted by the maintainer on 2026-11-11;
+# see docs/decisions/013-per-venue-trends.md. They live here and nowhere else.
+Z95 = 1.959964             # 95% Wilson interval
+HIDE_REL_WIDTH = 1.0       # hide a point when its Wilson half-width exceeds 100% of its share
+GREY_REL_WIDTH = 0.5       # draw it grey when the half-width exceeds 50% of its share
+TOP_N = 6                  # fixed top set (013: ranked on the pooled corpus), rest -> "Other"
+NOTE_FRACTION = 0.5        # judgment call: "most" = more than half of a venue's points
+GREY = "#8b8f9a"
+OTHER = "Other"
+
+
+def wilson_half_width(k, n):
+    """Half-width of the 95% Wilson interval for k/n, as a fraction (matches the audit)."""
+    p, z2 = k / n, Z95 ** 2
+    return Z95 * math.sqrt(p * (1 - p) / n + z2 / (4 * n ** 2)) / (1 + z2 / n)
+
+
+def point_status(k, n):
+    """'hide' | 'grey' | 'ok'. A zero count has no usable share, so it is always hidden."""
+    if k == 0:
+        return "hide"
+    rel = wilson_half_width(k, n) / (k / n)
+    return "hide" if rel > HIDE_REL_WIDTH else "grey" if rel > GREY_REL_WIDTH else "ok"
+
+
+vy = data["venue_year_mega"]
+vy_cats = vy["categories"]
+by_vy = {(r["venue"], r["year"]): r for r in vy["rows"]}
+pooled_n = {c: sum(r["counts"][c] for r in vy["rows"]) for c in vy_cats}
+top = sorted(vy_cats, key=lambda c: (-pooled_n[c], c))[:TOP_N]  # same tie-break as the audit
+vseries = top + [OTHER]
+VSERIES_COLOR = dict(zip(vseries, COLORS))
+
+
+def cell_count(r, c):
+    return r["n_labeled"] - sum(r["counts"][t] for t in top) if c == OTHER else r["counts"][c]
+
+
+def venue_view(ven):
+    """One venue's chart + legend + notes. A venue-year that does not exist is a gap (None);
+    hidden points break the line too, so no line ever implies a value we refuse to show."""
+    cells = {c: [] for c in vseries}
+    for yr in years:
+        r = by_vy.get((ven, yr))
+        for c in vseries:
+            if r is None:
+                cells[c].append(None)
+                continue
+            k, n = cell_count(r, c), r["n_labeled"]
+            cells[c].append((point_status(k, n), k, n, 100 * k / n))
+    flat = [x for c in vseries for x in cells[c] if x]
+    vis = [x[3] for x in flat if x[0] != "hide"]
+    vmax = max(vis)
+    vy_of = lambda v: PAD_T + plot_h * (1 - v / (vmax * 1.08))
+    lines, pts, legend = [], [], []
+    for i, c in enumerate(vseries):
+        color, name = VSERIES_COLOR[c], html.escape(c)
+        dash = ' stroke-dasharray="6 4"' if c == OTHER else ""
+        run = []
+        for j, cl in enumerate(cells[c]):
+            if cl and cl[0] != "hide":
+                x, y = x_of(j), vy_of(cl[3])
+                grey = cl[0] == "grey"
+                ring = f'stroke="{color}" stroke-width="1.5" ' if grey else ""  # grey fill keeps its colour as a ring
+                pts.append(
+                    f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.8" fill="{GREY if grey else color}" '
+                    f'{ring}'
+                    f'stroke-opacity="1" class="vpt" data-name="{name}" data-year="{years[j]}" '
+                    f'data-val="{cl[3]:.1f}" data-k="{cl[1]}" data-n="{cl[2]}" '
+                    f'data-grey="{int(grey)}" data-x="{x:.1f}"/>')
+            prev = cells[c][j - 1] if j else None
+            if cl and prev and cl[0] != "hide" and prev[0] != "hide":
+                a, b = (x_of(j - 1), vy_of(prev[3])), (x_of(j), vy_of(cl[3]))
+                if cl[0] == "grey" or prev[0] == "grey":  # segment touching a grey point
+                    if run:
+                        lines.append((color, dash, run))
+                        run = []
+                    lines.append((GREY, ' stroke-dasharray="3 4"', [a, b]))
+                else:
+                    run = run or [a]
+                    run.append(b)
+            elif run:
+                lines.append((color, dash, run))
+                run = []
+        if run:
+            lines.append((color, dash, run))
+        ly = 20 + i * 22
+        legend.append(f'<g class="vlegend-item"><rect x="0" y="{ly}" width="12" height="12" rx="3" '
+                      f'fill="{color}"/><text x="18" y="{ly+10}" class="legend-label">{name}</text></g>')
+    line_svg = "".join(
+        f'<polyline points="{" ".join(f"{px:.1f},{py:.1f}" for px, py in p)}" fill="none" '
+        f'stroke="{col}" stroke-width="2.2" opacity="0.9"{d}/>' for col, d, p in lines if len(p) > 1)
+    yt = "".join(
+        f'<text x="{PAD_L-10}" y="{vy_of(t)+4:.1f}" text-anchor="end" class="axis-label">{t}%</text>'
+        f'<line x1="{PAD_L}" y1="{vy_of(t):.1f}" x2="{W-PAD_R}" y2="{vy_of(t):.1f}" class="gridline"/>'
+        for t in range(0, int(vmax) + 10, 10))
+    xt = "".join(
+        f'<text x="{x_of(j):.1f}" y="{H-PAD_B+20}" text-anchor="middle" class="axis-label">{yr}</text>'
+        f'<text x="{x_of(j):.1f}" y="{H-PAD_B+35}" text-anchor="middle" class="n-label">'
+        f'{"n=" + str(by_vy[(ven, yr)]["n_labeled"]) if (ven, yr) in by_vy else "&mdash;"}</text>'
+        for j, yr in enumerate(years))
+    absent = [str(yr) for yr in years if (ven, yr) not in by_vy]
+    gap_note = (f" {ven.upper()} did not run in {' and '.join(absent)}, so the lines break there."
+                if absent else "")
+    notes = [f'<p class="note">n = labelled papers that year (the denominator of every share). '
+             f'Grey dot: too few papers for a reliable share. Hidden: even less reliable.'
+             f'{gap_note}</p>']
+    ven_n = {c: sum(r["counts"][c] for (v, _), r in by_vy.items() if v == ven) for c in vy_cats}
+    big = max(ven_n, key=ven_n.get)
+    if sum(x[0] != "ok" for x in flat) / len(flat) > NOTE_FRACTION:
+        notes.insert(0, f'<p class="warn">Most points for {ven.upper()} are hidden or grey. '
+                        f'{ven_n[big] / sum(ven_n.values()):.0%} of its papers fall in one broad area '
+                        f'({html.escape(big)}), so this mega-category level cannot resolve trends here.</p>')
+    return (f'<div class="view" id="view-{ven}" hidden>{"".join(notes)}'
+            f'<svg viewBox="0 0 200 240" class="chart" style="max-width:220px;float:right">{"".join(legend)}</svg>'
+            f'<svg viewBox="0 0 {W} {H+16}" class="chart"><line class="vguide" x1="0" y1="{PAD_T}" '
+            f'x2="0" y2="{H-PAD_B}"/>{yt}{line_svg}{"".join(pts)}{xt}</svg></div>')
+
+
+venue_names = sorted({r["venue"] for r in vy["rows"]})
+venue_views = "".join(venue_view(v) for v in venue_names)
+venue_options = '<option value="all">All</option>' + "".join(
+    f'<option value="{v}">{v.upper()}</option>' for v in venue_names)
+
 # Chart 2: venue share of accepted papers, grouped bars by year
-manifest = data["venue_counts_by_year"]
+manifest =data["venue_counts_by_year"]
 venues = sorted(set(r["venue"] for r in manifest))
 v_years = sorted(set(r["year"] for r in manifest))
 lookup = {(r["venue"], r["year"]): r for r in manifest}
@@ -137,6 +263,8 @@ chart2 = f'''
 <p class="note">Faded bars = incomplete venue-year (conference not yet concluded or proceedings not yet published).</p>
 '''
 
+VENUE_JS = '\nconst venueSelect = document.getElementById(\'venue-select\');\nvenueSelect.addEventListener(\'change\', () => {\n  document.querySelectorAll(\'#views .view\').forEach(v => { v.hidden = v.id !== \'view-\' + venueSelect.value; });\n  tooltip.style.display = \'none\';\n});\ndocument.querySelectorAll(\'.vpt\').forEach(pt => {\n  const guide = pt.closest(\'svg\').querySelector(\'.vguide\');\n  const show = e => {\n    tooltip.style.display = \'block\';\n    const low = pt.dataset.grey === \'1\'\n      ? \'<br><span style="opacity:0.6">few papers: read with caution</span>\' : \'\';\n    tooltip.innerHTML = `<b>${pt.dataset.name}</b><br>${pt.dataset.year}: ${pt.dataset.val}% `\n      + `(${pt.dataset.k} of ${pt.dataset.n} labelled papers)${low}`;\n    guide.setAttribute(\'x1\', pt.dataset.x); guide.setAttribute(\'x2\', pt.dataset.x);\n    guide.classList.add(\'visible\');\n    positionTooltip(e);\n  };\n  const hide = () => { tooltip.style.display = \'none\'; guide.classList.remove(\'visible\'); };\n  pt.addEventListener(\'mouseenter\', show);\n  pt.addEventListener(\'mousemove\', positionTooltip);\n  pt.addEventListener(\'mouseleave\', hide);\n  pt.addEventListener(\'click\', show);  // touch screens have no hover\n});\n// Tap anywhere that is not a venue point to dismiss the tooltip a tap opened.\ndocument.addEventListener(\'click\', e => {\n  if (!e.target.closest(\'.vpt\')) {\n    tooltip.style.display = \'none\';\n    document.querySelectorAll(\'.vguide\').forEach(g => g.classList.remove(\'visible\'));\n  }\n});\n'
+
 PAGE = f'''<!doctype html>
 <html>
 <head>
@@ -194,6 +322,23 @@ h2 {{ font-weight: 600; font-size: 18px; margin: 0 0 4px; }}
     font-size: 12px; pointer-events: none; z-index: 10;
 }}
 .note {{ opacity: 0.5; font-size: 12px; margin-top: 8px; }}
+.controls {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }}
+.controls select {{
+    background: rgba(10,12,18,0.9); color: var(--text); font: inherit; font-size: 16px;
+    border: 1px solid rgba(107,111,176,0.5); border-radius: 8px; padding: 8px 12px;
+    min-height: 44px; width: 100%; max-width: 260px;
+}}
+.warn {{ font-size: 13px; line-height: 1.4; margin: 0 0 12px; padding: 10px 12px;
+    border-left: 3px solid #8b8f9a; background: rgba(139,143,154,0.12); border-radius: 4px; }}
+.n-label {{ fill: rgba(232,232,240,0.4); font-size: 9px; }}
+.vlegend-item {{ cursor: default; }}
+.vpt {{ cursor: pointer; stroke-width: 1.5; transition: r 0.12s ease; }}
+.vpt:hover {{ r: 6.5; }}
+.vguide {{
+    stroke: rgba(232,232,240,0.25); stroke-width: 1; stroke-dasharray: 3 3;
+    opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
+}}
+.vguide.visible {{ opacity: 1; }}
 </style>
 </head>
 <body>
@@ -204,8 +349,15 @@ h2 {{ font-weight: 600; font-size: 18px; margin: 0 0 4px; }}
 <div class="panel">
   <h2>What the field pays attention to, over time</h2>
   <div class="panel-desc">Share of that year's corpus, by broad research area. Not raw counts (the corpus itself grew ~5x over this period): this shows which areas grew faster or slower than the field as a whole.</div>
+  <div class="controls"><label for="venue-select">Venue</label>
+    <select id="venue-select" aria-controls="views">{venue_options}</select></div>
+  <div id="views">
+  <div class="view" id="view-all">
   <svg viewBox="0 0 200 240" class="chart" style="max-width:220px;float:right">{"".join(legend_svg)}</svg>
   {chart1}
+  </div>
+  {venue_views}
+  </div>
 </div>
 
 <div class="panel">
@@ -292,7 +444,7 @@ document.querySelectorAll('.bar').forEach(bar => {{
   bar.addEventListener('mousemove', positionTooltip);
   bar.addEventListener('mouseleave', () => tooltip.style.display = 'none');
 }});
-</script>
+{VENUE_JS}</script>
 </body>
 </html>
 '''
