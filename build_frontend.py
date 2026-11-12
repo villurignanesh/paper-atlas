@@ -249,10 +249,29 @@ li { margin: 4px 0; font-size: 14px; }
    actual mechanism. Targets #search-container specifically, not the shared
    .container-box class, so other widgets (topic tree, histogram) aren't affected. */
 #search-container {
-    position: relative;
+    position: fixed !important;
+    top: 82px; left: 50%; transform: translateX(-50%);
+    width: min(440px, calc(100vw - 32px)) !important;
+    z-index: 1001;
     padding: 4px !important;
     height: auto !important;
 }
+#topic-tree { margin-top: 64px; }
+#search-zoom-matches {
+    display: none; position: absolute; top: calc(100% + 7px); left: 0;
+    border: 1px solid rgba(107,111,176,.55); border-radius: 8px;
+    background: rgba(20,24,32,.94); color: #e8e8f0;
+    font: 600 13px var(--ui-font); padding: 8px 12px; cursor: pointer;
+}
+#map-zoom-control {
+    position: fixed; right: 20px; bottom: 20px; z-index: 1001;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(20,24,32,.86); color: #e8e8f0;
+    border: 1px solid rgba(107,111,176,.45); border-radius: 12px;
+    padding: 8px; font-family: var(--ui-font); backdrop-filter: blur(8px);
+}
+#map-zoom-control button { width: 36px; height: 36px; border: 0; border-radius: 7px; background: #30364d; color: inherit; font-size: 20px; cursor: pointer; }
+#map-zoom-control input { width: 110px; accent-color: #8e92d4; }
 #text-search::placeholder { color: rgba(232, 232, 240, 0.4) !important; font-weight: 400; }
 #search-icon {
     position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
@@ -483,6 +502,95 @@ SEARCH_POLISH_JS = """
 })();
 """
 
+ZOOM_CONTROL_JS = """
+(function() {
+  const map = window.datamap;
+  if (!map) return;
+  const start = map.deckgl.props.initialViewState.zoom;
+  const min = start - 1, max = start + 9;
+  const control = document.createElement('div');
+  control.id = 'map-zoom-control';
+  control.setAttribute('aria-label', 'Map zoom');
+  control.innerHTML = '<button type="button" aria-label="Zoom out">−</button>' +
+    '<input type="range" aria-label="Map zoom level" step="0.1">' +
+    '<button type="button" aria-label="Zoom in">+</button>';
+  document.body.appendChild(control);
+  const slider = control.querySelector('input');
+  slider.min = min; slider.max = max; slider.value = start;
+  const view = () => map.deckgl.viewManager.getViewState();
+  function setZoom(zoom) {
+    const next = {...view(), zoom: Math.max(min, Math.min(max, zoom)), transitionDuration: 250};
+    map.deckgl.setProps({initialViewState: next});
+    map.notifyViewStateChange(next);
+  }
+  control.querySelectorAll('button')[0].addEventListener('click', () => setZoom(view().zoom - 0.5));
+  control.querySelectorAll('button')[1].addEventListener('click', () => setZoom(view().zoom + 0.5));
+  slider.addEventListener('input', () => setZoom(Number(slider.value)));
+  map.onViewStateChange('zoom-control', ({viewState}) => {
+    if (viewState) slider.value = Math.max(min, Math.min(max, viewState.zoom));
+  });
+})();
+"""
+
+SEARCH_NAVIGATION_JS = """
+(function() {
+  const map = window.datamap;
+  const input = document.querySelector('#text-search');
+  const container = document.querySelector('#search-container');
+  if (!map || !input || !container) return;
+  const button = document.createElement('button');
+  button.id = 'search-zoom-matches';
+  button.type = 'button';
+  container.appendChild(button);
+  let timer, matches = [];
+  let extent;
+  const baseZoom = map.deckgl.props.initialViewState.zoom;
+  function bounds(indices) {
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const i of indices) {
+      const x = map.pointData.x[i], y = map.pointData.y[i];
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+      y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    }
+    return [x0, x1, y0, y1];
+  }
+  function focus(indices) {
+    if (!indices.length) return;
+    const [x0, x1, y0, y1] = bounds(indices);
+    const {zoomLevel} = calculateZoomLevel([x0, x1, y0, y1], innerWidth, innerHeight, 0.8);
+    const next = {
+      ...map.deckgl.viewManager.getViewState(),
+      longitude: (x0 + x1) / 2, latitude: (y0 + y1) / 2,
+      zoom: Math.max(baseZoom - 1, Math.min(baseZoom + 9, zoomLevel)),
+      transitionDuration: 500,
+    };
+    map.deckgl.setProps({initialViewState: next});
+    map.notifyViewStateChange(next);
+  }
+  function update() {
+    if (!map.searchArray || !map.pointData) return;
+    const term = input.value.toLowerCase();
+    matches = term ? map.searchArray.reduce((out, text, i) => {
+      if (text.includes(term)) out.push(i);
+      return out;
+    }, []) : [];
+    button.style.display = 'none';
+    if (!matches.length) return;
+    extent ||= bounds(map.pointData.x.map((_, i) => i));
+    const box = bounds(matches);
+    const compact = box[1] - box[0] <= .15 * (extent[1] - extent[0]) &&
+                    box[3] - box[2] <= .15 * (extent[3] - extent[2]);
+    if (matches.length <= 12 && compact) focus(matches);
+    else {
+      button.textContent = `Zoom to ${matches.length.toLocaleString()} matches`;
+      button.style.display = 'block';
+    }
+  }
+  input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(update, 350); });
+  button.addEventListener('click', () => focus(matches));
+})();
+"""
+
 TOPIC_TREE_HIGHLIGHT_JS = """
 (function() {
   function applyHighlight(searchTerm) {
@@ -614,7 +722,7 @@ plot = datamapplot.create_interactive_plot(
     # topic_tree.js: `this.container.style.fontSize = this.fontSize`), not per-item, so
     # setting it here rather than fighting it from CSS keeps one source of truth for size.
     topic_tree_kwds={"font_size": "14px"},
-    custom_js=SEARCH_POLISH_JS + "\n" + TOPIC_TREE_HIGHLIGHT_JS + "\n" + TOPIC_TREE_DEDUPE_JS,
+    custom_js=SEARCH_POLISH_JS + "\n" + ZOOM_CONTROL_JS + "\n" + SEARCH_NAVIGATION_JS + "\n" + TOPIC_TREE_HIGHLIGHT_JS + "\n" + TOPIC_TREE_DEDUPE_JS,
     # Clicking opens the paper directly. Originally relied on a link INSIDE the hover
     # tooltip, but moving the cursor from the point to the tooltip to click it made the
     # tooltip disappear first (the tooltip tracks point hover, not itself). on_click
