@@ -1,7 +1,7 @@
 # 017: Shared query core for MCP access (issue #3)
 
 Date: 2026-11-11
-Status: decided (serving architecture); tool and retrieval contracts open
+Status: decided (serving architecture and first tool set); distribution and MCP SDK open
 
 ## Context
 
@@ -35,10 +35,20 @@ They do not contain extracted full-paper text or page locations. The first MCP m
 label that limit plainly and must not present abstract-based evidence as PDF-level
 verification. PDF reading and page citations are separate future work.
 
+## First tool set (chosen 2026-11-12)
+
+The maintainer chose search, paper details, and cluster-based related papers over
+search/details alone or blocking the MCP on full-PDF extraction. Search starts with
+lexical matches against the existing metadata and abstracts; it is not query-embedding
+semantic search. Related papers share an existing leaf cluster, with that relationship
+stated in the result. It does not imply citation, agreement, or direct support.
+
+The shared query core is implemented first using existing dependencies. An MCP SDK is
+not added until the maintainer explicitly approves it.
+
 ## Still to decide
 
-- Initial tools and result schema, including how evidence and provenance appear.
-- Retrieval method: lexical, cluster-assisted, semantic, or a staged combination.
+- Exact result schema, ranking, and query limits after measuring the first core.
 - How a user obtains and refreshes the local corpus snapshot.
 - MCP SDK dependency and the eventual hosted transport/deployment details.
 
